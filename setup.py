@@ -46,8 +46,8 @@ install_options = {
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: Apache Software License",
     ],
-
-    "scripts": ["sixer.py"],
+    "py_modules": ["sixer"],
+    "entry_points": {'console_scripts': ['sixer=sixer:main']},
 }
 
 setup(**install_options)
