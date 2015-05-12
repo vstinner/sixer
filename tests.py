@@ -26,16 +26,22 @@ class TestOperations(unittest.TestCase):
         self.patcher = sixer.Patcher('.', "unset")
 
     def check(self, operation, before, after):
+        before = textwrap.dedent(before).strip()
+        after = textwrap.dedent(after).strip()
+
         self.patcher.operation = operation
         with tempfile.NamedTemporaryFile("w+") as temp:
-            temp.write(before.strip())
+            temp.write(before)
             temp.flush()
             with replace_stdout():
                 self.patcher.patch(temp.name)
             temp.seek(0)
             code = temp.read()
 
-        self.assertEqual(code, textwrap.dedent(after).strip())
+        self.assertEqual(code, after)
+
+    def check_unchanged(self, operation, code):
+        self.check(operation, code, code)
 
     def test_raise2(self):
         self.check("raise",
@@ -91,6 +97,17 @@ class TestOperations(unittest.TestCase):
             value = six.text_type(data)
             """)
 
+    def test_unicode_unchanged(self):
+        self.check_unchanged("unicode",
+            """
+            import unicodedata
+
+            # unicode in comments
+
+            def test_unicode():
+                pass
+            """)
+
     def test_iteritems(self):
         self.check("iteritems",
             "for key, value in data.iteritems(): pass",
@@ -98,6 +115,17 @@ class TestOperations(unittest.TestCase):
             import six
 
             for key, value in six.iteritems(data): pass
+            """)
+
+    def test_iteritems_expr(self):
+        self.check("iteritems",
+            """
+            items = obj.data[0].attr.iteritems()
+            """,
+            """
+            import six
+
+            items = six.iteritems(obj.data[0].attr)
             """)
 
     def test_itervalues(self):
@@ -114,10 +142,22 @@ class TestOperations(unittest.TestCase):
             "item = gen.next()",
             "item = next(gen)")
 
+        self.check("next",
+            "item = (x+1 for x in data).next()",
+            "item = next(x+1 for x in data)")
+
+        self.check("next",
+            "item = ((x * 2) for x in data).next()",
+            "item = next((x * 2) for x in data)")
+
     def test_long(self):
         self.check("long",
             "values = (0L, 1L, 12L, 123L, 1234L, 12345L)",
             "values = (0, 1, 12, 123, 1234, 12345)")
+
+        # octal numbers are unchanged
+        self.check_unchanged("long",
+            "values = (00L, 01L, 012L, 0123L, 01234L, 012345L)")
 
 
 if __name__ == "__main__":

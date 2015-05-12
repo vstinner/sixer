@@ -8,6 +8,9 @@ import tokenize
 # be replaced with range(10) without "from six.moves import range".
 MAX_RANGE = 1024
 
+OPERATIONS = ("iteritems", "itervalues", "next",
+              "long", "unicode", "raise", "xrange")
+
 STDLIB_MODULES = ("copy", "re")
 
 # Name prefix of third-party modules (ex: "oslo" matches "osloconfig"
@@ -78,7 +81,10 @@ def itervalues_replace(regs):
 
 
 def next_replace(regs):
-    return 'next(%s)' % regs.group(1)
+    expr = regs.group(1)
+    if expr.startswith('(') and expr.endswith(')'):
+        expr = expr[1:-1]
+    return 'next(%s)' % expr
 
 
 def long_replace(regs):
@@ -407,15 +413,8 @@ def usage():
     print("usage: %s <directory> <operation>" % sys.argv[0])
     print()
     print("operations:")
-    print("- iteritems: replace dict.iteritems() with six.iteritems(dict)")
-    print("- itervalues: replace dict.itervalues() with six.itervalues(dict)")
-    print("- next: replace iter.next() with next(iter)")
-    print("- long: replace 123L with 123, and 010 with 0o10")
-    print("- raise: replace raise a, b, c with six.reraise(a, b, c)")
-    print("         and replace raise a, b with raise a(b)")
-    print("- unicode: replace unicode with six.text_type")
-    print("- xrange: replace xrange() with range() and add")
-    print('          "from six.moves import range"')
+    for operation in sorted(OPERATIONS):
+        print("- %s" % operation)
     sys.exit(1)
 
 
@@ -424,8 +423,7 @@ def main():
         usage()
     dir = sys.argv[1]
     operation = sys.argv[2]
-    if operation not in ("iteritems", "itervalues", "next",
-                      "long", "unicode", "raise", "xrange"):
+    if operation not in OPERATIONS:
         print("invalid operation: %s" % operation)
         print()
         usage()

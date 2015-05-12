@@ -22,7 +22,7 @@ Operations
 - ``long``:
 
   * replace ``123L`` with ``123``
-  * replace ``010`` with ``0o10``
+  * octal number are unchanged (ex: ``010L``)
 
 - ``next``:
 
