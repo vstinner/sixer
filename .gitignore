@@ -1,0 +1,5 @@
+*.pyc
+*.swp
+sixer.egg-info
+build/
+dist/
