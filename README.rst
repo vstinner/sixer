@@ -8,6 +8,38 @@ warnings when code was not patched or looks suspicious.
 
 Homepage: https://github.com/haypo/sixer
 
+Usage
+-----
+
+::
+
+    sixer.py <directory> <operation>
+
+sixer.py displays the name of patched files. It displays warnings for code
+unchanged but which looks suspicious.
+
+Warning: sixer.py modifies files inplace without asking for confirmation.  It's
+better to use it in a project managed by a source control manager (ex: git).
+
+Available operations:
+
+- iteritems
+- itervalues
+- long
+- next
+- raise
+- unicode
+- xrange
+
+
+Installation
+------------
+
+To install sixer::
+
+    pip install sixer
+
+
 Operations
 ----------
 
@@ -67,6 +99,15 @@ positives. For example, some operations replace patterns in strings, comments
 or function names even if it doesn't make sense.
 
 Use the 2to6 project if you need a more reliable tool.
+
+
+Tests
+-----
+
+To run tests, type ``tox``. Type ``pip install tox`` to install the ``tox``
+program.
+
+Or run tests manually: type ``python3 tests.py``.
 
 
 See also

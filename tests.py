@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import contextlib
-import six
+import io
 import sixer
 import sys
 import tempfile
@@ -12,7 +12,7 @@ import unittest
 def replace_stdout():
     old_stdout = sys.stdout
     try:
-        buffer = six.StringIO()
+        buffer = io.StringIO()
         sys.stdout = buffer
         yield buffer
     finally:
