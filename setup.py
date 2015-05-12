@@ -1,7 +1,7 @@
 # Release procedure:
 #
 #  - fill changelog
-#  - run tests
+#  - run tests: tox
 #  - update version in setup.py
 #  - set release date in the changelog
 #  - check that "python setup.py sdist" contains all files tracked by
@@ -26,7 +26,7 @@ with open("README.rst") as fp:
 
 install_options = {
     "name": "sixer",
-    "version": "0.0",
+    "version": "0.1",
     "license": "Apache License 2.0",
     "author": 'Victor Stinner',
     "author_email": 'victor.stinner@gmail.com',

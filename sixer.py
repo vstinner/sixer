@@ -408,7 +408,7 @@ def usage():
     print()
     print("operations:")
     print("- iteritems: replace dict.iteritems() with six.iteritems(dict)")
-    print("- itervalue: replace dict.itervalues() with six.itervalues(dict)")
+    print("- itervalues: replace dict.itervalues() with six.itervalues(dict)")
     print("- next: replace iter.next() with next(iter)")
     print("- long: replace 123L with 123, and 010 with 0o10")
     print("- raise: replace raise a, b, c with six.reraise(a, b, c)")
