@@ -1,20 +1,26 @@
-# Release procedure:
+# Release procedure
 #
-#  - fill changelog
+# Prepare the release:
+#
+#  - fill the changelog in README.rst
 #  - run tests: tox
 #  - update version in setup.py
-#  - set release date in the changelog
+#  - set release date in the changelog in README.rst
 #  - check that "python setup.py sdist" contains all files tracked by
 #    the SCM (Mercurial): update MANIFEST.in if needed
-#  - hg ci
-#  - hg tag VERSION
-#  - hg push
+#  - git commit -a
+#  - git tag VERSION
+#  - git push --tags
+#  - git push
 #
-#  - On Linux: python setup.py register sdist bdist_wheel upload
-#  - On Windows: python release.py release
+# Release the new version:
+#
+#  - python setup.py register sdist bdist_wheel upload
+#
+# After the release:
 #
 #  - increment version in setup.py
-#  - hg ci && hg push
+#  - git commit && git push
 
 try:
     from setuptools import setup

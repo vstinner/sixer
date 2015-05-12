@@ -1,12 +1,18 @@
 Sixer
 =====
 
-Program to add Python 3 support for a Python 2 project written for OpenStack.
+sixer is a tool adding Python 3 support to a Python 2 project.
 
-Use basic regular expressions to find code which needs to be modified. Emit
-warnings when code was not patched or looks suspicious.
+sixer was written to produces patches to port OpenStack to Python 3.
 
-Homepage: https://github.com/haypo/sixer
+It uses basic regular expressions to find code which needs to be modified. It
+emits warnings when code was not patched or looks suspicious.
+
+* `sixer project at Github
+  <https://github.com/haypo/sixer>`_
+* `sixer in the Python Cheeseshop (PyPI)
+  <https://pypi.python.org/pypi/sixer>`_
+
 
 Usage
 -----
@@ -35,7 +41,7 @@ Available operations:
 Installation
 ------------
 
-To install sixer::
+To install sixer, type::
 
     pip install sixer
 
@@ -94,11 +100,11 @@ imports.
 Limitations
 -----------
 
-The project was written in a few hours using regular expressions, it has false
-positives. For example, some operations replace patterns in strings, comments
-or function names even if it doesn't make sense.
+The project is based on regular expressions, it produces false positives
+(invalid changes). For example, some operations replace patterns in strings,
+comments or function names even if it doesn't make sense.
 
-Use the 2to6 project if you need a more reliable tool.
+Try also the 2to6 project which may be more reliable.
 
 
 Tests
@@ -108,6 +114,12 @@ To run tests, type ``tox``. Type ``pip install tox`` to install the ``tox``
 program.
 
 Or run tests manually: type ``python3 tests.py``.
+
+
+Changelog
+---------
+
+* 2015-05-12: Version 0.1, first public release
 
 
 See also
