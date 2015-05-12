@@ -97,6 +97,69 @@ class TestOperations(unittest.TestCase):
             value = six.text_type(data)
             """)
 
+    def test_add_six_import(self):
+        # only stdlib
+        self.check("unicode",
+            """
+            import copy
+
+            t = unicode
+            """,
+            """
+            import copy
+
+            import six
+
+            t = six.text_type
+            """)
+
+        # only third party
+        self.check("unicode",
+            """
+            import oslo_utils
+
+            t = unicode
+            """,
+            """
+            import oslo_utils
+            import six
+
+            t = six.text_type
+            """)
+
+        # stdlib+third party
+        self.check("unicode",
+            """
+            import copy
+
+            import oslo_utils
+
+            t = unicode
+            """,
+            """
+            import copy
+
+            import oslo_utils
+            import six
+
+            t = six.text_type
+            """)
+
+        # only application
+        self.check("unicode",
+            """
+            import nova
+
+            t = unicode
+            """,
+            """
+            import six
+
+            import nova
+
+            t = six.text_type
+            """)
+
     def test_unicode_unchanged(self):
         self.check_unchanged("unicode",
             """

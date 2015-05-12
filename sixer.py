@@ -11,11 +11,15 @@ MAX_RANGE = 1024
 OPERATIONS = ("iteritems", "itervalues", "next",
               "long", "unicode", "raise", "xrange")
 
+# Modules of the Python standard library
 STDLIB_MODULES = ("copy", "re")
 
 # Name prefix of third-party modules (ex: "oslo" matches "osloconfig"
 # and "oslo.db")
 THIRD_PARTY_MODULES = ("oslo", "webob")
+
+# Modules of the application
+APPLICATION_MODULES = ("nova",)
 
 # Ugly regular expressions because I'm too lazy to write a real parser,
 # and Match Object are convinient to modify code in-place
@@ -162,8 +166,7 @@ class Patcher(object):
                     yield os.path.join(dirpath, filename)
 
     def _add_import(self, content, import_line, import_names):
-        # If non-zero, its a position where a new import group will be created
-        create_new_import_group = 0
+        create_new_import_group = None
 
         import_groups = parse_import_groups(content)
         if not import_groups:
@@ -183,8 +186,8 @@ class Patcher(object):
                        for name in imports):
                     # oslo* are third-party modules
                     break
-                if any(name == "nova" for name in imports):
-                    # nova are local imports, use the previous group
+                if any(name in APPLICATION_MODULES for name in imports):
+                    # application import, add import six before in a new group
                     create_new_import_group = start
                     break
                 if any(name in STDLIB_MODULES for name in imports):
@@ -196,7 +199,7 @@ class Patcher(object):
                     raise Exception("Unable to locate the import group of "
                                     "third-party modules in %s" % import_groups)
 
-        if create_new_import_group:
+        if create_new_import_group is not None:
             pos = create_new_import_group
             return content[:pos] + import_line + '\n\n' + content[pos:]
 
