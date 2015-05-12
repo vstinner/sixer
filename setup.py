@@ -6,7 +6,7 @@
 #  - run tests: tox
 #  - update version in setup.py
 #  - set release date in the changelog in README.rst
-#  - check that "python setup.py sdist" contains all files tracked by
+#  - check that "python3 setup.py sdist" contains all files tracked by
 #    the SCM (Mercurial): update MANIFEST.in if needed
 #  - git commit -a
 #  - git tag VERSION
@@ -15,12 +15,13 @@
 #
 # Release the new version:
 #
-#  - python setup.py register sdist bdist_wheel upload
+#  - python3 setup.py register sdist bdist_wheel upload
 #
 # After the release:
 #
 #  - increment version in setup.py
 #  - git commit && git push
+import sys
 
 try:
     from setuptools import setup
@@ -32,7 +33,7 @@ with open("README.rst") as fp:
 
 install_options = {
     "name": "sixer",
-    "version": "0.1.1",
+    "version": "0.2",
     "license": "Apache License 2.0",
     "author": 'Victor Stinner',
     "author_email": 'victor.stinner@gmail.com',

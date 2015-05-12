@@ -119,8 +119,7 @@ Or run tests manually: type ``python3 tests.py``.
 Changelog
 ---------
 
-* 2015-05-12: Version 0.1.1, fix setup.py to make sixer installable
-* 2015-05-12: Version 0.1, first public release
+* 2015-05-12: Version 0.2, first public release
 
 
 See also
