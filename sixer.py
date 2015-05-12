@@ -1,10 +1,4 @@
 #!/usr/bin/env python3
-"""
-Program to add Python 3 support for a Python 2 project written for OpenStack.
-
-Use basic regular expressions to find code which needs to be modified. Emit
-warnings when code was not patched or looks suspicious.
-"""
 import os
 import re
 import sys

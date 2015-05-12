@@ -1,7 +1,10 @@
 Sixer
 =====
 
-Add Python 3 support to Python 2 applications using the six module.
+Program to add Python 3 support for a Python 2 project written for OpenStack.
+
+Use basic regular expressions to find code which needs to be modified. Emit
+warnings when code was not patched or looks suspicious.
 
 Homepage: https://github.com/haypo/sixer
 
