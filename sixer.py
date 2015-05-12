@@ -143,11 +143,12 @@ def get_line(content, pos):
 
 
 class Patcher(object):
-    def __init__(self, directory, change):
+    def __init__(self, directory, operation):
         self.directory = directory
-        self.change = change
+        self.operation = operation
         self.warnings = []
         self.current_file = None
+        self.max_range = MAX_RANGE
 
     def walk(self):
         for dirpath, dirnames, filenames in os.walk(self.directory):
@@ -327,13 +328,12 @@ class Patcher(object):
                 self.warn_line(line)
 
     def patch_raise(self, content):
+        old_content = content
+        content = RAISE2_REGEX.sub(raise2_replace, content)
         new_content = RAISE3_REGEX.sub(raise3_replace, content)
-        new_content = RAISE2_REGEX.sub(raise2_replace, new_content)
-        if new_content == content:
-            return (False, content)
-
-        new_content = self.add_import_six(new_content)
-        return (True, new_content)
+        if new_content != content:
+            content = self.add_import_six(new_content)
+        return (content != old_content, content)
 
     def check_raise(self, content):
         for match in RAISE_LINE_REGEX.finditer(content):
@@ -345,7 +345,7 @@ class Patcher(object):
         def xrange1_replace(regs):
             nonlocal need_six
             end = int(regs.group(1))
-            if end > MAX_RANGE:
+            if end > self.max_range:
                 need_six = True
             return 'range(%s)' % end
 
@@ -353,7 +353,7 @@ class Patcher(object):
             nonlocal need_six
             start = int(regs.group(1))
             end = int(regs.group(2))
-            if (end - start) > MAX_RANGE:
+            if (end - start) > self.max_range:
                 need_six = True
             return 'range(%s, %s)' % (start, end)
 
@@ -380,8 +380,8 @@ class Patcher(object):
         with tokenize.open(filename) as fp:
             content = fp.read()
 
-        checker = getattr(self, "check_" + self.change)
-        patcher = getattr(self, "patch_" + self.change)
+        checker = getattr(self, "check_" + self.operation)
+        patcher = getattr(self, "patch_" + self.operation)
 
         modified, content = patcher(content)
         if not modified:
@@ -429,14 +429,14 @@ def main():
     if len(sys.argv) != 3:
         usage()
     dir = sys.argv[1]
-    change = sys.argv[2]
-    if change not in ("iteritems", "itervalues", "next",
+    operation = sys.argv[2]
+    if operation not in ("iteritems", "itervalues", "next",
                       "long", "unicode", "raise", "xrange"):
-        print("invalid operation: %s" % change)
+        print("invalid operation: %s" % operation)
         print()
         usage()
 
-    Patcher(dir, change).main()
+    Patcher(dir, operation).main()
 
 if __name__ == "__main__":
     main()
