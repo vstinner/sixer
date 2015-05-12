@@ -32,7 +32,7 @@ with open("README.rst") as fp:
 
 install_options = {
     "name": "sixer",
-    "version": "0.1",
+    "version": "0.1.1",
     "license": "Apache License 2.0",
     "author": 'Victor Stinner',
     "author_email": 'victor.stinner@gmail.com',
