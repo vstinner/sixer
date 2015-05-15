@@ -19,7 +19,7 @@ STDLIB_MODULES = ("copy", "re")
 THIRD_PARTY_MODULES = ("oslo", "webob")
 
 # Modules of the application
-APPLICATION_MODULES = ("nova",)
+APPLICATION_MODULES = ("nova", "ceilometer")
 
 # Ugly regular expressions because I'm too lazy to write a real parser,
 # and Match Object are convinient to modify code in-place
