@@ -19,7 +19,7 @@ STDLIB_MODULES = ("copy", "re")
 THIRD_PARTY_MODULES = ("oslo", "webob")
 
 # Modules of the application
-APPLICATION_MODULES = ("nova", "ceilometer")
+APPLICATION_MODULES = ("nova", "ceilometer", "glance")
 
 # Ugly regular expressions because I'm too lazy to write a real parser,
 # and Match Object are convinient to modify code in-place
@@ -210,9 +210,10 @@ class Patcher(object):
             line = get_line(content, pos)
             if line == "\n":
                 break
-            names = parse_import(line)
-            if import_names < names:
-                break
+            if not line.startswith("#"):
+                names = parse_import(line)
+                if import_names < names:
+                    break
             pos += len(line)
 
         return content[:pos] + import_line + '\n' + content[pos:]
