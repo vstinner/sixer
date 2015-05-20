@@ -222,6 +222,16 @@ class TestOperations(unittest.TestCase):
         self.check_unchanged("long",
             "values = (00L, 01L, 012L, 0123L, 01234L, 012345L)")
 
+    def test_basestring(self):
+        self.check("basestring",
+            "isinstance(foo, basestring)",
+            """
+            import six
+
+            isinstance(foo, six.string_types)
+            """)
+
+
 
 if __name__ == "__main__":
     unittest.main()

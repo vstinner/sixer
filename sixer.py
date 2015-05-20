@@ -9,7 +9,8 @@ import tokenize
 MAX_RANGE = 1024
 
 OPERATIONS = ("iteritems", "itervalues", "next",
-              "long", "unicode", "raise", "xrange")
+              "long", "unicode", "raise", "xrange",
+              "basestring")
 
 # Modules of the Python standard library
 STDLIB_MODULES = ("copy", "re")
@@ -19,7 +20,7 @@ STDLIB_MODULES = ("copy", "re")
 THIRD_PARTY_MODULES = ("oslo", "webob")
 
 # Modules of the application
-APPLICATION_MODULES = ("nova", "ceilometer", "glance")
+APPLICATION_MODULES = ("nova", "ceilometer", "glance", "neutron")
 
 # Ugly regular expressions because I'm too lazy to write a real parser,
 # and Match Object are convinient to modify code in-place
@@ -74,6 +75,9 @@ RAISE_LINE_REGEX = re.compile(r"^.*raise %s,.*$" % EXPR_REGEX, re.MULTILINE)
 # 'xrange(2)'
 XRANGE1_REGEX = re.compile(r"xrange\(([0-9]+)\)")
 XRANGE2_REGEX = re.compile(r"xrange\(([0-9]+), ([0-9]+)\)")
+
+# basestring
+BASESTRING_REGEX = re.compile(r"basestring")
 
 
 def iteritems_replace(regs):
@@ -372,6 +376,18 @@ class Patcher(object):
         if need_six:
             new_content = self.add_import(new_content, 'from six.moves import range')
         return (new_content != content, new_content)
+
+    def patch_basestring(self, content):
+        new_content = BASESTRING_REGEX.sub('six.string_types', content)
+        if new_content == content:
+            return (False, content)
+        new_content = self.add_import_six(new_content)
+        return (True, new_content)
+
+    def check_basestring(self, content):
+        for line in content.splitlines():
+            if 'basestring' in line:
+                self.warn_line(line)
 
     def check_xrange(self, content):
         for line in content.splitlines():
