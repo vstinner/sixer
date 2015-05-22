@@ -8,19 +8,19 @@ import tokenize
 # be replaced with range(10) without "from six.moves import range".
 MAX_RANGE = 1024
 
-OPERATIONS = ("iteritems", "itervalues", "next",
+OPERATIONS = ("all", "iteritems", "itervalues", "iterkeys", "next",
               "long", "unicode", "raise", "xrange",
               "basestring")
 
 # Modules of the Python standard library
-STDLIB_MODULES = ("copy", "re")
+STDLIB_MODULES = ("copy", "re", "sys", "unittest", "heapq", "glob", "os")
 
 # Name prefix of third-party modules (ex: "oslo" matches "osloconfig"
 # and "oslo.db")
-THIRD_PARTY_MODULES = ("oslo", "webob")
+THIRD_PARTY_MODULES = ("oslo", "webob", "subunit", "testtools")
 
 # Modules of the application
-APPLICATION_MODULES = ("nova", "ceilometer", "glance", "neutron")
+APPLICATION_MODULES = ("nova", "ceilometer", "glance", "neutron", "cinder")
 
 # Ugly regular expressions because I'm too lazy to write a real parser,
 # and Match Object are convinient to modify code in-place
@@ -48,8 +48,10 @@ IMPORT_NAME_REGEX = re.compile(r"^(?:import|from) (%s)" % IDENTIFIER_REGEX,
 IMPORT_SIX_REGEX = re.compile(r"^import six$", re.MULTILINE)
 ITERITEMS_REGEX = re.compile(r"(%s)\.iteritems\(\)" % EXPR_REGEX)
 ITERVALUES_REGEX = re.compile(r"(%s)\.itervalues\(\)" % EXPR_REGEX)
+ITERKEYS_REGEX = re.compile(r"(%s)\.iterkeys\(\)" % EXPR_REGEX)
 ITERITEMS_LINE_REGEX = re.compile(r"^.*\biteritems *\(.*$", re.MULTILINE)
 ITERVALUES_LINE_REGEX = re.compile(r"^.*\bitervalues *\(.*$", re.MULTILINE)
+ITERKEYS_LINE_REGEX = re.compile(r"^.*\biterkeys *\(.*$", re.MULTILINE)
 # Match 'gen.next()' and '(...).next()'
 NEXT_REGEX = re.compile(r"(%s|%s)\.next\(\)" % (EXPR_REGEX, PARENT_REGEX))
 NEXT_LINE_REGEX = re.compile(r"^.*\.next *\(.*$", re.MULTILINE)
@@ -86,6 +88,10 @@ def iteritems_replace(regs):
 
 def itervalues_replace(regs):
     return 'six.itervalues(%s)' % regs.group(1)
+
+
+def iterkeys_replace(regs):
+    return 'six.iterkeys(%s)' % regs.group(1)
 
 
 def next_replace(regs):
@@ -247,6 +253,13 @@ class Patcher(object):
         new_content = self.add_import_six(new_content)
         return (True, new_content)
 
+    def patch_iterkeys(self, content):
+        new_content = ITERKEYS_REGEX.sub(iterkeys_replace, content)
+        if new_content == content:
+            return (False, content)
+        new_content = self.add_import_six(new_content)
+        return (True, new_content)
+
     def warn_line(self, line):
         self.warnings.append("%s: %s"
                              % (self.current_file, line.strip()))
@@ -261,6 +274,12 @@ class Patcher(object):
         for match in ITERVALUES_LINE_REGEX.finditer(content):
             line = match.group(0)
             if "six.itervalues" not in line:
+                self.warn_line(line)
+
+    def check_iterkeys(self, content):
+        for match in ITERKEYS_LINE_REGEX.finditer(content):
+            line = match.group(0)
+            if "six.iterkeys" not in line:
                 self.warn_line(line)
 
     def patch_next(self, content):
@@ -393,6 +412,23 @@ class Patcher(object):
         for line in content.splitlines():
             if 'xrange' in line:
                 self.warn_line(line)
+
+    def patch_all(self, content):
+        modified = False
+        for operation in OPERATIONS:
+            if operation == 'all':
+                continue
+            patcher = getattr(self, "patch_" + operation)
+            op_modified, content = patcher(content)
+            modified |= op_modified
+        return modified, content
+
+    def check_all(self, content):
+        for operation in OPERATIONS:
+            if operation == 'all':
+                continue
+            checker = getattr(self, "check_" + operation)
+            checker(content)
 
     def patch(self, filename):
         self.current_file = filename

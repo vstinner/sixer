@@ -121,6 +121,12 @@ Or run tests manually: type ``python3 tests.py``.
 Changelog
 ---------
 
+* Version 0.3
+
+  - Add "iterkeys" and "all" operations
+  - Enhance the knownledge tables for modules (stdlib, third party,
+    applications)
+
 * 2015-05-12: Version 0.2, first public release
 
 
