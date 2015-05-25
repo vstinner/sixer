@@ -123,7 +123,7 @@ Changelog
 
 * Version 0.3
 
-  - Add "iterkeys", "six_moves" and "all" operations
+  - Add "iterkeys", "six_moves", "stringio" and "all" operations
   - Enhance the knownledge tables for modules (stdlib, third party,
     applications)
 

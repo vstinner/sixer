@@ -10,7 +10,7 @@ MAX_RANGE = 1024
 
 OPERATIONS = ("all", "iteritems", "itervalues", "iterkeys", "next",
               "long", "unicode", "raise", "xrange",
-              "basestring", "six_moves")
+              "basestring", "six_moves", "stringio")
 
 # Modules of the Python standard library
 STDLIB_MODULES = ("copy", "re", "sys", "unittest", "heapq", "glob", "os")
@@ -66,6 +66,7 @@ SIX_MOVES_REGEX = ("(%s)" % '|'.join(sorted(map(re.escape, SIX_MOVES.keys()))))
 FROM_REGEX = r"(%s(?:, %s)*)" % (IDENTIFIER_REGEX, IDENTIFIER_REGEX)
 IMPORT_REGEX = re.compile(r"^import %s\n\n?" % SIX_MOVES_REGEX, re.MULTILINE)
 FROM_IMPORT_REGEX = re.compile(r"^from %s import %s" % (SIX_MOVES_REGEX, FROM_REGEX), re.MULTILINE)
+IMPORT_STRINGIO_REGEX = re.compile(r"^import StringIO\n\n?", re.MULTILINE)
 
 # '123L' but not '0123L'
 LONG_REGEX = re.compile(r"\b([1-9][0-9]*|0)L")
@@ -458,6 +459,17 @@ class Patcher(object):
         return (new_content != content, new_content)
 
     def check_six_moves(self, content):
+        pass
+
+    def patch_stringio(self, content):
+        new_content = IMPORT_STRINGIO_REGEX.sub('', content)
+        if new_content == content:
+            return (False, content)
+        new_content = self.add_import_six(new_content)
+        new_content = new_content.replace("StringIO.StringIO", "six.StringIO")
+        return (True, new_content)
+
+    def check_stringio(self, content):
         pass
 
     def patch_all(self, content):

@@ -249,6 +249,19 @@ class TestOperations(unittest.TestCase):
             "from __builtin__ import len, open",
             "from six.moves.builtins import len, open")
 
+    def test_stringio(self):
+        self.check("stringio",
+            """
+            import StringIO
+
+            s = StringIO.StringIO()
+            """,
+            """
+            import six
+
+            s = six.StringIO()
+            """)
+
 
 if __name__ == "__main__":
     unittest.main()
