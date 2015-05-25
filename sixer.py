@@ -25,6 +25,7 @@ APPLICATION_MODULES = ("nova", "ceilometer", "glance", "neutron", "cinder")
 SIX_MOVES = {
     # Python 2 import => six.moves import
     '__builtin__': 'builtins',
+    'ConfigParser': 'configparser',
 }
 
 URLLIB = {
