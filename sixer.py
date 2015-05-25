@@ -38,7 +38,7 @@ URLLIB = {
 # and Match Object are convinient to modify code in-place
 
 def import_regex(name):
-    return re.compile(r"^import %s\n\n?" % name, re.MULTILINE)
+    return re.compile(r"^import %s\n" % name, re.MULTILINE)
 
 
 # 'inst'
