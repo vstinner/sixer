@@ -17,7 +17,7 @@ STDLIB_MODULES = ("copy", "re", "sys", "unittest", "heapq", "glob", "os")
 
 # Name prefix of third-party modules (ex: "oslo" matches "osloconfig"
 # and "oslo.db")
-THIRD_PARTY_MODULES = ("oslo", "webob", "subunit", "testtools")
+THIRD_PARTY_MODULES = ("oslo", "webob", "subunit", "testtools", "eventlet")
 
 # Modules of the application
 APPLICATION_MODULES = ("nova", "ceilometer", "glance", "neutron", "cinder")
@@ -28,11 +28,35 @@ SIX_MOVES = {
     'ConfigParser': 'configparser',
 }
 
-URLLIB = {
-    # Python 2 symbol => six.moves.urllib submodule
-    'urlopen': 'request',
-    'URLError': 'error',
+SIX_MOVES_URLLIB = {
+    # six.moves.urllib submodule => Python 2 urllib/urllib2 symbols
+    'error': (
+        'HTTPError',
+        'URLError',
+    ),
+
+    'request': (
+        'HTTPBasicAuthHandler',
+        'HTTPCookieProcessor',
+        'HTTPPasswordMgrWithDefaultRealm',
+        'HTTPSHandler',
+        'ProxyHandler',
+        'Request',
+        'build_opener',
+        'install_opener',
+        'urlopen',
+    ),
+
+    'parse': (
+        'quote',
+        'unquote',
+        'urlencode',
+    ),
 }
+URLLIB = {}
+for submodule, symbols in SIX_MOVES_URLLIB.items():
+    for symbol in symbols:
+        URLLIB[symbol] = submodule
 
 # Ugly regular expressions because I'm too lazy to write a real parser,
 # and Match Object are convinient to modify code in-place
@@ -78,9 +102,9 @@ FROM_REGEX = r"(%s(?:, %s)*)" % (IDENTIFIER_REGEX, IDENTIFIER_REGEX)
 IMPORT_REGEX = re.compile(r"^import %s\n\n?" % SIX_MOVES_REGEX, re.MULTILINE)
 FROM_IMPORT_REGEX = re.compile(r"^from %s import %s" % (SIX_MOVES_REGEX, FROM_REGEX), re.MULTILINE)
 IMPORT_STRINGIO_REGEX = import_regex(r"StringIO")
-IMPORT_URLLIB_REGEX = import_regex(r"urllib2?")
+IMPORT_URLLIB_REGEX = import_regex(r"\burllib2?\b")
 
-URLLIB_REGEX = re.compile(r"urllib2\.(%s)" % IDENTIFIER_REGEX)
+URLLIB_REGEX = re.compile(r"\burllib2?\.(%s)" % IDENTIFIER_REGEX)
 
 # '123L' but not '0123L'
 LONG_REGEX = re.compile(r"\b([1-9][0-9]*|0)L")
@@ -503,6 +527,10 @@ class Patcher(object):
         pass
 
     def patch_urllib(self, content):
+        if ('from six.moves import urllib' in content
+            or 'six.moves.urllib' in content):
+            return (False, content)
+
         new_content = URLLIB_REGEX.sub(replace_urllib, content)
         if new_content == content:
             return (False, content)
