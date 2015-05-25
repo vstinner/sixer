@@ -231,6 +231,23 @@ class TestOperations(unittest.TestCase):
             isinstance(foo, six.string_types)
             """)
 
+    def test_six_moves_import(self):
+        self.check("six_moves",
+            """
+            import __builtin__
+
+            __builtin__.open()
+            """,
+            """
+            from six.moves import builtins
+
+            builtins.open()
+            """)
+
+    def test_six_moves_from_import(self):
+        self.check("six_moves",
+            "from __builtin__ import len, open",
+            "from six.moves.builtins import len, open")
 
 
 if __name__ == "__main__":

@@ -10,7 +10,7 @@ MAX_RANGE = 1024
 
 OPERATIONS = ("all", "iteritems", "itervalues", "iterkeys", "next",
               "long", "unicode", "raise", "xrange",
-              "basestring")
+              "basestring", "six_moves")
 
 # Modules of the Python standard library
 STDLIB_MODULES = ("copy", "re", "sys", "unittest", "heapq", "glob", "os")
@@ -21,6 +21,11 @@ THIRD_PARTY_MODULES = ("oslo", "webob", "subunit", "testtools")
 
 # Modules of the application
 APPLICATION_MODULES = ("nova", "ceilometer", "glance", "neutron", "cinder")
+
+SIX_MOVES = {
+    # Python 2 import => six.moves import
+    '__builtin__': 'builtins',
+}
 
 # Ugly regular expressions because I'm too lazy to write a real parser,
 # and Match Object are convinient to modify code in-place
@@ -56,6 +61,11 @@ ITERKEYS_LINE_REGEX = re.compile(r"^.*\biterkeys *\(.*$", re.MULTILINE)
 NEXT_REGEX = re.compile(r"(%s|%s)\.next\(\)" % (EXPR_REGEX, PARENT_REGEX))
 NEXT_LINE_REGEX = re.compile(r"^.*\.next *\(.*$", re.MULTILINE)
 DEF_NEXT_LINE_REGEX = re.compile(r"^.*def next *\(.*$", re.MULTILINE)
+
+SIX_MOVES_REGEX = ("(%s)" % '|'.join(sorted(map(re.escape, SIX_MOVES.keys()))))
+FROM_REGEX = r"(%s(?:, %s)*)" % (IDENTIFIER_REGEX, IDENTIFIER_REGEX)
+IMPORT_REGEX = re.compile(r"^import %s\n\n?" % SIX_MOVES_REGEX, re.MULTILINE)
+FROM_IMPORT_REGEX = re.compile(r"^from %s import %s" % (SIX_MOVES_REGEX, FROM_REGEX), re.MULTILINE)
 
 # '123L' but not '0123L'
 LONG_REGEX = re.compile(r"\b([1-9][0-9]*|0)L")
@@ -180,7 +190,10 @@ class Patcher(object):
 
         import_groups = parse_import_groups(content)
         if not import_groups:
-            return import_line + '\n\n' + content
+            if content:
+                return import_line + '\n\n' + content
+            else:
+                return import_line
 
         if import_groups[0][2] == {'__future__'}:
             # Ignore the first import group: from __future__ import ...
@@ -412,6 +425,40 @@ class Patcher(object):
         for line in content.splitlines():
             if 'xrange' in line:
                 self.warn_line(line)
+
+    def patch_six_moves(self, content):
+        add_imports = []
+        replace = []
+
+        def six_moves_import(regs):
+            name = regs.group(1)
+            new_name = SIX_MOVES[name]
+            line = 'from six.moves import %s' % new_name
+            add_imports.append(line)
+            replace.append((name, new_name))
+            return ''
+
+        def six_moves_from_import(regs):
+            new_name = SIX_MOVES[regs.group(1)]
+            line = 'from six.moves.%s import %s' % (new_name, regs.group(2))
+            add_imports.append(line)
+            return ''
+
+        new_content = IMPORT_REGEX.sub(six_moves_import,
+                                       content)
+        new_content = FROM_IMPORT_REGEX.sub(six_moves_from_import,
+                                            new_content)
+        for old_name, new_name in replace:
+            # Only match words
+            regex = r'\b%s\b' % re.escape(old_name)
+            new_content = re.sub(regex, new_name, new_content)
+        for line in add_imports:
+            names = parse_import(line)
+            new_content = self._add_import(new_content, line, names)
+        return (new_content != content, new_content)
+
+    def check_six_moves(self, content):
+        pass
 
     def patch_all(self, content):
         modified = False
