@@ -10,7 +10,7 @@ MAX_RANGE = 1024
 
 OPERATIONS = ("all", "iteritems", "itervalues", "iterkeys", "next",
               "long", "unicode", "raise", "xrange",
-              "basestring", "six_moves", "stringio")
+              "basestring", "six_moves", "stringio", "urllib")
 
 # Modules of the Python standard library
 STDLIB_MODULES = ("copy", "re", "sys", "unittest", "heapq", "glob", "os")
@@ -27,8 +27,18 @@ SIX_MOVES = {
     '__builtin__': 'builtins',
 }
 
+URLLIB = {
+    # Python 2 symbol => six.moves.urllib submodule
+    'urlopen': 'request',
+    'URLError': 'error',
+}
+
 # Ugly regular expressions because I'm too lazy to write a real parser,
 # and Match Object are convinient to modify code in-place
+
+def import_regex(name):
+    return re.compile(r"^import %s\n\n?" % name, re.MULTILINE)
+
 
 # 'inst'
 IDENTIFIER_REGEX = r'[a-zA-Z_][a-zA-Z0-9_]*'
@@ -66,7 +76,10 @@ SIX_MOVES_REGEX = ("(%s)" % '|'.join(sorted(map(re.escape, SIX_MOVES.keys()))))
 FROM_REGEX = r"(%s(?:, %s)*)" % (IDENTIFIER_REGEX, IDENTIFIER_REGEX)
 IMPORT_REGEX = re.compile(r"^import %s\n\n?" % SIX_MOVES_REGEX, re.MULTILINE)
 FROM_IMPORT_REGEX = re.compile(r"^from %s import %s" % (SIX_MOVES_REGEX, FROM_REGEX), re.MULTILINE)
-IMPORT_STRINGIO_REGEX = re.compile(r"^import StringIO\n\n?", re.MULTILINE)
+IMPORT_STRINGIO_REGEX = import_regex(r"StringIO")
+IMPORT_URLLIB_REGEX = import_regex(r"urllib2?")
+
+URLLIB_REGEX = re.compile(r"urllib2\.(%s)" % IDENTIFIER_REGEX)
 
 # '123L' but not '0123L'
 LONG_REGEX = re.compile(r"\b([1-9][0-9]*|0)L")
@@ -159,7 +172,16 @@ def parse_import(line):
         names.append(line[pos2+len(" import "):])
         return names
     else:
-        raise Exception("unable to parse import %r" % line)
+        raise SyntaxError("unable to parse import %r" % line)
+
+
+def replace_urllib(regs):
+    name = regs.group(1)
+    try:
+        submodule = URLLIB[name]
+    except KeyError:
+        raise Exception("unknown urllib symbol: %s" % regs.group(0))
+    return 'urllib.%s.%s' % (submodule, name)
 
 
 def get_line(content, pos):
@@ -176,6 +198,10 @@ class Patcher(object):
         self.max_range = MAX_RANGE
 
     def walk(self):
+        if os.path.isfile(self.directory):
+            yield self.directory
+            return
+
         for dirpath, dirnames, filenames in os.walk(self.directory):
             # Don't walk into .tox
             try:
@@ -234,8 +260,11 @@ class Patcher(object):
             line = get_line(content, pos)
             if line == "\n":
                 break
-            if not line.startswith("#"):
+            try:
                 names = parse_import(line)
+            except SyntaxError:
+                pass
+            else:
                 if import_names < names:
                     break
             pos += len(line)
@@ -470,6 +499,20 @@ class Patcher(object):
         return (True, new_content)
 
     def check_stringio(self, content):
+        pass
+
+    def patch_urllib(self, content):
+        new_content = URLLIB_REGEX.sub(replace_urllib, content)
+        if new_content == content:
+            return (False, content)
+
+        new_content2 = IMPORT_URLLIB_REGEX.sub('', new_content)
+        if new_content2 == new_content:
+            raise Exception("unable to remove urllib or urllib2 import")
+        new_content = self.add_import(new_content2, "from six.moves import urllib")
+        return (True, new_content)
+
+    def check_urllib(self, content):
         pass
 
     def patch_all(self, content):

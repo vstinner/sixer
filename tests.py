@@ -262,6 +262,25 @@ class TestOperations(unittest.TestCase):
             s = six.StringIO()
             """)
 
+    def test_urllib(self):
+        self.check("urllib",
+            """
+            import urllib2
+
+            try:
+                urllib2.urlopen(url)
+            except urllib2.URLError as exc:
+                pass
+            """,
+            """
+            from six.moves import urllib
+
+            try:
+                urllib.request.urlopen(url)
+            except urllib.error.URLError as exc:
+                pass
+            """)
+
 
 if __name__ == "__main__":
     unittest.main()
