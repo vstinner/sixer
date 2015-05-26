@@ -259,6 +259,7 @@ class TestOperations(unittest.TestCase):
             """
             import six
 
+
             s = six.StringIO()
             """)
 
@@ -275,10 +276,24 @@ class TestOperations(unittest.TestCase):
             """
             from six.moves import urllib
 
+
             try:
                 urllib.request.urlopen(url)
             except urllib.error.URLError as exc:
                 pass
+            """)
+
+        self.check("urllib",
+            """
+            import urllib2
+
+            m = urllib2
+            """,
+            """
+            from six.moves import urllib
+
+
+            m = urllib
             """)
 
 

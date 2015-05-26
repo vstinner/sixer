@@ -108,7 +108,10 @@ FROM_IMPORT_REGEX = re.compile(r"^from %s import %s" % (SIX_MOVES_REGEX, FROM_RE
 IMPORT_STRINGIO_REGEX = import_regex(r"StringIO")
 IMPORT_URLLIB_REGEX = import_regex(r"\burllib2?\b")
 
-URLLIB_REGEX = re.compile(r"\burllib2?\.(%s)" % IDENTIFIER_REGEX)
+# 'urllib2'
+URLLIB2_REGEX = re.compile(r"\burllib2\b")
+# urllib.attr or urllib2.attr
+URLLIB_ATTR_REGEX = re.compile(r"\burllib2?\.(%s)" % IDENTIFIER_REGEX)
 
 # '123L' but not '0123L'
 LONG_REGEX = re.compile(r"\b([1-9][0-9]*|0)L")
@@ -535,14 +538,14 @@ class Patcher(object):
             or 'six.moves.urllib' in content):
             return (False, content)
 
-        new_content = URLLIB_REGEX.sub(replace_urllib, content)
+        new_content = IMPORT_URLLIB_REGEX.sub('', content)
+        new_content = URLLIB_ATTR_REGEX.sub(replace_urllib, new_content)
+        new_content = URLLIB2_REGEX.sub('urllib', new_content)
         if new_content == content:
             return (False, content)
 
-        new_content2 = IMPORT_URLLIB_REGEX.sub('', new_content)
-        if new_content2 == new_content:
-            raise Exception("unable to remove urllib or urllib2 import")
-        new_content = self.add_import(new_content2, "from six.moves import urllib")
+        new_content = self.add_import(new_content,
+                                      "from six.moves import urllib")
         return (True, new_content)
 
     def check_urllib(self, content):
