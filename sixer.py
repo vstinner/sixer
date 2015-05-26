@@ -26,6 +26,10 @@ SIX_MOVES = {
     # Python 2 import => six.moves import
     '__builtin__': 'builtins',
     'ConfigParser': 'configparser',
+    'BaseHTTPServer': 'BaseHTTPServer',
+    'httplib': 'http_client',
+    'repr': 'reprlib',
+    'Queue': 'queue',
 }
 
 SIX_MOVES_URLLIB = {
