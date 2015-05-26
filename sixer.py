@@ -4,6 +4,8 @@ import re
 import sys
 import tokenize
 
+# TODO: UserDict
+
 # Maximum range which creates a list on Python 2. For example, xrange(10) can
 # be replaced with range(10) without "from six.moves import range".
 MAX_RANGE = 1024
@@ -17,7 +19,7 @@ STDLIB_MODULES = ("copy", "re", "sys", "unittest", "heapq", "glob", "os")
 
 # Name prefix of third-party modules (ex: "oslo" matches "osloconfig"
 # and "oslo.db")
-THIRD_PARTY_MODULES = ("oslo", "webob", "subunit", "testtools", "eventlet")
+THIRD_PARTY_MODULES = ("oslo", "webob", "subunit", "testtools", "eventlet", "mock")
 
 # Modules of the application
 APPLICATION_MODULES = ("nova", "ceilometer", "glance", "neutron", "cinder")

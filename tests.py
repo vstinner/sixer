@@ -264,6 +264,7 @@ class TestOperations(unittest.TestCase):
             """)
 
     def test_urllib(self):
+        # urllib2.urlopen, urllib2.URLError
         self.check("urllib",
             """
             import urllib2
@@ -283,6 +284,7 @@ class TestOperations(unittest.TestCase):
                 pass
             """)
 
+        # import urllib2
         self.check("urllib",
             """
             import urllib2
