@@ -29,7 +29,7 @@ class TestOperations(unittest.TestCase):
         before = textwrap.dedent(before).strip()
         after = textwrap.dedent(after).strip()
 
-        self.patcher.operation = operation
+        self.patcher.operations = (operation,)
         with tempfile.NamedTemporaryFile("w+") as temp:
             temp.write(before)
             temp.flush()
@@ -198,6 +198,15 @@ class TestOperations(unittest.TestCase):
             import six
 
             for value in six.itervalues(data): pass
+            """)
+
+    def test_iterkeys(self):
+        self.check("iterkeys",
+            "for value in data.iterkeys(): pass",
+            """
+            import six
+
+            for value in six.iterkeys(data): pass
             """)
 
     def test_next(self):
