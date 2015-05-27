@@ -257,24 +257,22 @@ def get_line(content, pos):
 
 
 class Patcher(object):
-    def __init__(self, path, operations):
+    def __init__(self, operations):
         operations = set(operations)
         if 'all' in operations:
             operations |= set(OPERATIONS)
             operations.discard('all')
-
-        self.path = path
         self.operations = operations
         self.warnings = []
         self.current_file = None
         self.max_range = MAX_RANGE
 
-    def walk(self):
-        if os.path.isfile(self.path):
-            yield self.path
+    def _walk(self, path):
+        if os.path.isfile(path):
+            yield path
             return
 
-        for dirpath, dirnames, filenames in os.walk(self.path):
+        for dirpath, dirnames, filenames in os.walk(path):
             # Don't walk into .tox
             try:
                 dirnames.remove(".tox")
@@ -283,6 +281,11 @@ class Patcher(object):
             for filename in filenames:
                 if filename.endswith(".py"):
                     yield os.path.join(dirpath, filename)
+
+    def walk(self, paths):
+        for path in paths:
+            for filename in self._walk(path):
+                yield filename
 
     def _add_import(self, content, import_line, import_names):
         create_new_import_group = None
@@ -663,8 +666,8 @@ class Patcher(object):
         self.check(content)
         return True
 
-    def main(self):
-        for filename in self.walk():
+    def main(self, paths):
+        for filename in self.walk(paths):
             try:
                 self.patch(filename)
             except Exception:
@@ -679,11 +682,13 @@ class Patcher(object):
 
 
 def usage():
-    print("usage: %s <directory> <operation>" % sys.argv[0])
+    print("usage: %s <operation> <file1> <file2> <...>" % sys.argv[0])
     print()
     print("operations:")
     for operation in sorted(OPERATIONS):
         print("- %s" % operation)
+    print()
+    print("If a directory is passed, sixer finds .py files in subdirectories")
     print()
     print("<operation> can be a list of operations separated by commas")
     print("Example: six_moves,urllib")
@@ -691,17 +696,17 @@ def usage():
 
 
 def main():
-    if len(sys.argv) != 3:
+    if len(sys.argv) < 3:
         usage()
-    dir = sys.argv[1]
-    operations = sys.argv[2].split(',')
+    operations = sys.argv[1].split(',')
+    files = sys.argv[2:]
     for operation in operations:
         if operation not in OPERATIONS:
             print("invalid operation: %s" % operation)
             print()
             usage()
 
-    Patcher(dir, operations).main()
+    Patcher(operations).main(files)
 
 if __name__ == "__main__":
     main()

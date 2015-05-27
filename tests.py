@@ -27,7 +27,7 @@ class TestOperations(unittest.TestCase):
         after = textwrap.dedent(after).strip()
         warnings = kw.pop('warnings', None)
 
-        patcher = sixer.Patcher('.', (operation,))
+        patcher = sixer.Patcher((operation,))
         for attr, value in kw.items():
             setattr(patcher, attr, value)
 

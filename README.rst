@@ -182,8 +182,10 @@ Or run tests manually: type ``python3 tests.py``.
 Changelog
 ---------
 
-* Version 0.3.2
+* Version 0.4
 
+  - sixer.py now accepts multiple filenames on the command line, but
+    operations becomes the first command line parameter
   - Add cstring operation
   - stringio: replace also ``from StringIO import StringIO`` with
     ``from six import StringIO``
