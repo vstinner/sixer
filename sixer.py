@@ -165,7 +165,7 @@ XRANGE1_REGEX = re.compile(r"xrange\(([0-9]+)\)")
 XRANGE2_REGEX = re.compile(r"xrange\(([0-9]+), ([0-9]+)\)")
 
 # basestring
-BASESTRING_REGEX = re.compile(r"basestring")
+BASESTRING_REGEX = re.compile(r"\bbasestring\b")
 
 
 def iteritems_replace(regs):
