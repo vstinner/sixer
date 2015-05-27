@@ -19,12 +19,15 @@ Usage
 
 ::
 
-    sixer.py <directory> <operation>
+    sixer.py <directory or filename> <operation>
 
 sixer.py displays the name of patched files. It displays warnings for code
 unchanged but which looks suspicious.
 
-Warning: sixer.py modifies files inplace without asking for confirmation.  It's
+If you pass a directory, sixer.py searchs for ``.py`` files in all
+subdirectories.
+
+Warning: sixer.py modifies files inplace without asking for confirmation. It's
 better to use it in a project managed by a source control manager (ex: git).
 
 Available operations:
@@ -164,12 +167,14 @@ Or run tests manually: type ``python3 tests.py``.
 Changelog
 ---------
 
-* Version 0.3
+* 2015-05-27: Version 0.3
 
-  - Add "all", "basestring", "iterkeys", "six_moves", "stringio", "urllib"
-    operations
-  - Enhance the knownledge tables for modules (stdlib, third party,
+  - First command line parameter can now be a filename
+  - Add "all", "basestring", "iterkeys", "six_moves", "stringio"
+    and "urllib" operations
+  - Enhance the knownledge tables for modules (stdlib, third parties,
     applications)
+  - Ignore unparsable import lines when adding an import
 
 * 2015-05-12: Version 0.2, first public release
 
