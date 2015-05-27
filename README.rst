@@ -107,10 +107,17 @@ Operations
 
     - BaseHTTPServer
     - ConfigParser
+    - Cookie
+    - HTMLParser
     - Queue
+    - SimpleHTTPServer
+    - SimpleXMLRPCServer
     - __builtin__
+    - cookielib
+    - htmlentitydefs
     - httplib
     - repr
+    - xmlrpclib
 
 - ``urllib``:
 
