@@ -360,23 +360,20 @@ class Patcher(object):
     def patch_iteritems(self, content):
         new_content = ITERITEMS_REGEX.sub(iteritems_replace, content)
         if new_content == content:
-            return (False, content)
-        new_content = self.add_import_six(new_content)
-        return (True, new_content)
+            return content
+        return self.add_import_six(new_content)
 
     def patch_itervalues(self, content):
         new_content = ITERVALUES_REGEX.sub(itervalues_replace, content)
         if new_content == content:
-            return (False, content)
-        new_content = self.add_import_six(new_content)
-        return (True, new_content)
+            return content
+        return self.add_import_six(new_content)
 
     def patch_iterkeys(self, content):
         new_content = ITERKEYS_REGEX.sub(iterkeys_replace, content)
         if new_content == content:
-            return (False, content)
-        new_content = self.add_import_six(new_content)
-        return (True, new_content)
+            return content
+        return self.add_import_six(new_content)
 
     def _display_warning(self, warn):
         msg = "WARNING: %s: %s" % warn
@@ -406,8 +403,7 @@ class Patcher(object):
                 self.warn_line(line)
 
     def patch_next(self, content):
-        new_content = NEXT_REGEX.sub(next_replace, content)
-        return (new_content != content, new_content)
+        return NEXT_REGEX.sub(next_replace, content)
 
     def check_next(self, content):
         for match in NEXT_LINE_REGEX.finditer(content):
@@ -416,8 +412,7 @@ class Patcher(object):
             self.warn_line(match.group(0))
 
     def patch_long(self, content):
-        new_content = LONG_REGEX.sub(long_replace, content)
-        return (new_content != content, new_content)
+        return LONG_REGEX.sub(long_replace, content)
 
     def check_long(self, content):
         for match in LONG_LINE_REGEX.finditer(content):
@@ -461,11 +456,9 @@ class Patcher(object):
                 lines[index] = new_line
                 modified = True
         if not modified:
-            return (False, content)
+            return content
 
-        content = ''.join(lines)
-        content = self.add_import_six(content)
-        return (True, content)
+        return self.add_import_six(''.join(lines))
 
     def check_unicode(self, content):
         for line in content.splitlines():
@@ -483,7 +476,7 @@ class Patcher(object):
         new_content = RAISE3_REGEX.sub(raise3_replace, content)
         if new_content != content:
             content = self.add_import_six(new_content)
-        return (content != old_content, content)
+        return content
 
     def check_raise(self, content):
         for match in RAISE_LINE_REGEX.finditer(content):
@@ -517,14 +510,13 @@ class Patcher(object):
 
         if need_six:
             new_content = self.add_import(new_content, 'from six.moves import range')
-        return (new_content != content, new_content)
+        return new_content
 
     def patch_basestring(self, content):
         new_content = BASESTRING_REGEX.sub('six.string_types', content)
         if new_content == content:
-            return (False, content)
-        new_content = self.add_import_six(new_content)
-        return (True, new_content)
+            return content
+        return self.add_import_six(new_content)
 
     def check_basestring(self, content):
         for line in content.splitlines():
@@ -565,7 +557,7 @@ class Patcher(object):
         for line in add_imports:
             names = parse_import(line)
             new_content = self._add_import(new_content, line, names)
-        return (new_content != content, new_content)
+        return new_content
 
     def check_six_moves(self, content):
         pass
@@ -574,7 +566,8 @@ class Patcher(object):
         new_content = IMPORT_STRINGIO_REGEX.sub('', content)
         new_content2 = FROM_IMPORT_STRINGIO_REGEX.sub('', new_content)
         if new_content2 == content:
-            return (False, content)
+            return content
+
         replace1 = (new_content != content)
         replace2 = (new_content2 != new_content)
         new_content = new_content2
@@ -588,7 +581,7 @@ class Patcher(object):
         if replace2:
             new_content = self.add_import(new_content,
                                           'from six import StringIO')
-        return (True, new_content)
+        return new_content
 
     def check_stringio(self, content):
         for line in content.splitlines():
@@ -599,7 +592,8 @@ class Patcher(object):
         new_content = IMPORT_CSTRINGIO_REGEX.sub('', content)
         new_content2 = IMPORT_CSTRINGIO_AS_REGEX.sub('', new_content)
         if new_content2 == content:
-            return (False, content)
+            return content
+
         replace_cstringio = (new_content != content)
         replace_stringio = (new_content2 != new_content)
         new_content = new_content2
@@ -609,7 +603,7 @@ class Patcher(object):
             new_content = new_content.replace("cStringIO.StringIO", "moves.cStringIO")
         if replace_stringio:
             new_content = new_content.replace("StringIO.StringIO", "moves.cStringIO")
-        return (True, new_content)
+        return new_content
 
     def check_cstringio(self, content):
         for line in content.splitlines():
@@ -619,17 +613,15 @@ class Patcher(object):
     def patch_urllib(self, content):
         if ('from six.moves import urllib' in content
             or 'six.moves.urllib' in content):
-            return (False, content)
+            return content
 
         new_content = IMPORT_URLLIB_REGEX.sub('', content)
         new_content = URLLIB_ATTR_REGEX.sub(replace_urllib, new_content)
         new_content = URLLIB2_REGEX.sub('urllib', new_content)
         if new_content == content:
-            return (False, content)
+            return content
 
-        new_content = self.add_import(new_content,
-                                      "from six.moves import urllib")
-        return (True, new_content)
+        return self.add_import(new_content, "from six.moves import urllib")
 
     def check_urllib(self, content):
         for line in content.splitlines():
@@ -647,13 +639,13 @@ class Patcher(object):
         with tokenize.open(filename) as fp:
             content = fp.read()
 
-        modified = False
+        old_content = content
         for operation in self.operations:
             patcher = getattr(self, "patch_" + operation)
-            op_modified, content = patcher(content)
-            modified |= op_modified
+            content = patcher(content)
 
-        if not modified:
+        if content == old_content:
+            # no change
             self.check(content)
             return False
 
