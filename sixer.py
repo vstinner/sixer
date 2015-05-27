@@ -10,9 +10,9 @@ import tokenize
 # be replaced with range(10) without "from six.moves import range".
 MAX_RANGE = 1024
 
-OPERATIONS = ("all", "iteritems", "itervalues", "iterkeys", "next",
-              "long", "unicode", "raise", "xrange",
-              "basestring", "six_moves", "stringio", "urllib")
+OPERATIONS = set((
+    "all", "iteritems", "itervalues", "iterkeys", "next", "long", "unicode",
+    "raise", "xrange", "basestring", "six_moves", "stringio", "urllib"))
 
 # Modules of the Python standard library
 STDLIB_MODULES = ("copy", "re", "sys", "unittest", "heapq", "glob", "os")
@@ -229,19 +229,24 @@ def get_line(content, pos):
 
 
 class Patcher(object):
-    def __init__(self, directory, operation):
-        self.directory = directory
-        self.operation = operation
+    def __init__(self, path, operations):
+        operations = set(operations)
+        if 'all' in operations:
+            operations.extend(OPERATIONS)
+            operations.discard('all')
+
+        self.path = path
+        self.operations = operations
         self.warnings = []
         self.current_file = None
         self.max_range = MAX_RANGE
 
     def walk(self):
-        if os.path.isfile(self.directory):
-            yield self.directory
+        if os.path.isfile(self.path):
+            yield self.path
             return
 
-        for dirpath, dirnames, filenames in os.walk(self.directory):
+        for dirpath, dirnames, filenames in os.walk(self.path):
             # Don't walk into .tox
             try:
                 dirnames.remove(".tox")
@@ -558,20 +563,8 @@ class Patcher(object):
     def check_urllib(self, content):
         pass
 
-    def patch_all(self, content):
-        modified = False
-        for operation in OPERATIONS:
-            if operation == 'all':
-                continue
-            patcher = getattr(self, "patch_" + operation)
-            op_modified, content = patcher(content)
-            modified |= op_modified
-        return modified, content
-
-    def check_all(self, content):
-        for operation in OPERATIONS:
-            if operation == 'all':
-                continue
+    def check(self, content):
+        for operation in self.operations:
             checker = getattr(self, "check_" + operation)
             checker(content)
 
@@ -581,12 +574,14 @@ class Patcher(object):
         with tokenize.open(filename) as fp:
             content = fp.read()
 
-        checker = getattr(self, "check_" + self.operation)
-        patcher = getattr(self, "patch_" + self.operation)
+        modified = False
+        for operation in self.operations:
+            patcher = getattr(self, "patch_" + operation)
+            op_modified, content = patcher(content)
+            modified |= op_modified
 
-        modified, content = patcher(content)
         if not modified:
-            checker(content)
+            self.check(content)
             return False
 
         with open(filename, "rb") as fp:
@@ -595,7 +590,7 @@ class Patcher(object):
         print("Patch %s" % filename)
         with open(filename, "w", encoding=encoding) as fp:
             fp.write(content)
-        checker(content)
+        self.check(content)
         return True
 
     def main(self):
@@ -616,6 +611,9 @@ def usage():
     print("operations:")
     for operation in sorted(OPERATIONS):
         print("- %s" % operation)
+    print()
+    print("<operation> can be a list of operations separated by commas")
+    print("Example: six_moves,urllib")
     sys.exit(1)
 
 
@@ -623,13 +621,14 @@ def main():
     if len(sys.argv) != 3:
         usage()
     dir = sys.argv[1]
-    operation = sys.argv[2]
-    if operation not in OPERATIONS:
-        print("invalid operation: %s" % operation)
-        print()
-        usage()
+    operations = sys.argv[2].split(',')
+    for operation in operations:
+        if operation not in OPERATIONS:
+            print("invalid operation: %s" % operation)
+            print()
+            usage()
 
-    Patcher(dir, operation).main()
+    Patcher(dir, operations).main()
 
 if __name__ == "__main__":
     main()
