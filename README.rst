@@ -34,6 +34,7 @@ Available operations:
 
 - all
 - basestring
+- cstringio
 - iteritems
 - iterkeys
 - itervalues
@@ -126,8 +127,14 @@ Operations
 - ``stringio``:
 
   * replace ``StringIO.StringIO`` with ``six.StringIO``
-  * later you may have to replace it with ``six.StringIO`` when bytes are
-    expected on Python 3
+  * later you may have to replace it with ``six.BytesIO`` (or ``io.BytesIO``
+    if you don't support Python 2.6) when bytes are expected on Python 3
+
+- ``cstringio``:
+
+  * replace ``cStringIO.StringIO`` with ``moves.cStringIO``
+  * later you may have to replace it with ``six.BytesIO`` (or ``io.BytesIO``
+    if you don't support Python 2.6) when bytes are expected on Python 3
 
 - ``unicode``:
 
@@ -173,6 +180,10 @@ Or run tests manually: type ``python3 tests.py``.
 
 Changelog
 ---------
+
+* Version 0.3.2
+
+  - Add cstring operation
 
 * 2015-05-27: Version 0.3.1
 

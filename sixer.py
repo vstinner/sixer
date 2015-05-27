@@ -12,17 +12,20 @@ MAX_RANGE = 1024
 
 OPERATIONS = set((
     "all", "iteritems", "itervalues", "iterkeys", "next", "long", "unicode",
-    "raise", "xrange", "basestring", "six_moves", "stringio", "urllib"))
+    "raise", "xrange", "basestring", "six_moves", "stringio", "urllib",
+    "cstringio"))
 
 # Modules of the Python standard library
-STDLIB_MODULES = ("copy", "re", "sys", "unittest", "heapq", "glob", "os")
+STDLIB_MODULES = (
+    "copy", "re", "sys", "unittest", "heapq", "glob", "os", "string",
+    "textwrap", "StringIO")
 
 # Name prefix of third-party modules (ex: "oslo" matches "osloconfig"
 # and "oslo.db")
 THIRD_PARTY_MODULES = ("oslo", "webob", "subunit", "testtools", "eventlet", "mock")
 
 # Modules of the application
-APPLICATION_MODULES = ("nova", "ceilometer", "glance", "neutron", "cinder")
+APPLICATION_MODULES = ("nova", "ceilometer", "glance", "neutron", "cinder", "swift")
 
 SIX_MOVES = {
     # Python 2 import => six.moves import
@@ -118,7 +121,15 @@ SIX_MOVES_REGEX = ("(%s)" % '|'.join(sorted(map(re.escape, SIX_MOVES.keys()))))
 FROM_REGEX = r"(%s(?:, %s)*)" % (IDENTIFIER_REGEX, IDENTIFIER_REGEX)
 IMPORT_REGEX = re.compile(r"^import %s\n\n?" % SIX_MOVES_REGEX, re.MULTILINE)
 FROM_IMPORT_REGEX = re.compile(r"^from %s import %s" % (SIX_MOVES_REGEX, FROM_REGEX), re.MULTILINE)
+# 'import StringIO'
 IMPORT_STRINGIO_REGEX = import_regex(r"StringIO")
+# 'import cStringIO' or 'import cStringIO as StringIO'
+IMPORT_CSTRINGIO_REGEX = import_regex(r"cStringIO")
+# 'import cStringIO as StringIO'
+IMPORT_CSTRINGIO_AS_REGEX = import_regex(r"cStringIO as StringIO")
+# 'StringIO.', 'cStringIO.'
+CSTRINGIO_REGEX = re.compile(r'\bc?StringIO\.')
+# 'import urllib', 'import urllib2'
 IMPORT_URLLIB_REGEX = import_regex(r"\burllib2?\b")
 
 # 'urllib2' but not 'urllib2.parse_http_list'
@@ -359,10 +370,14 @@ class Patcher(object):
         new_content = self.add_import_six(new_content)
         return (True, new_content)
 
-    def warn_line(self, line):
-        msg = "WARNING: %s: %s" % (self.current_file, line.strip())
+    def _display_warning(self, warn):
+        msg = "WARNING: %s: %s" % warn
         print(msg)
-        self.warnings.append(msg)
+
+    def warn_line(self, line):
+        warn = (self.current_file, line.strip())
+        self._display_warning(warn)
+        self.warnings.append(warn)
 
     def check_iteritems(self, content):
         for match in ITERITEMS_LINE_REGEX.finditer(content):
@@ -556,7 +571,30 @@ class Patcher(object):
         return (True, new_content)
 
     def check_stringio(self, content):
-        pass
+        for line in content.splitlines():
+            if 'StringIO.StringIO' in line:
+                self.warn_line(line)
+
+    def patch_cstringio(self, content):
+        new_content = IMPORT_CSTRINGIO_REGEX.sub('', content)
+        new_content2 = IMPORT_CSTRINGIO_AS_REGEX.sub('', new_content)
+        if new_content2 == content:
+            return (False, content)
+        replace_stringio = (new_content != content)
+        replace_cstringio = (new_content2 != new_content)
+        new_content = new_content2
+
+        new_content = self.add_import(new_content, "from six import moves")
+        if replace_stringio:
+            new_content = new_content.replace("cStringIO.StringIO", "moves.cStringIO")
+        if replace_cstringio:
+            new_content = new_content.replace("StringIO.StringIO", "moves.cStringIO")
+        return (True, new_content)
+
+    def check_cstringio(self, content):
+        for line in content.splitlines():
+            if CSTRINGIO_REGEX.search(line):
+                self.warn_line(line)
 
     def patch_urllib(self, content):
         if ('from six.moves import urllib' in content
@@ -618,8 +656,9 @@ class Patcher(object):
 
         if self.warnings:
             print()
+            print("Warnings:")
         for warning in self.warnings:
-            print(warning)
+            self._display_warning(warning)
 
 
 def usage():
