@@ -10,10 +10,6 @@ import tokenize
 # be replaced with range(10) without "from six.moves import range".
 MAX_RANGE = 1024
 
-OPERATIONS = set((
-    "all", "iteritems", "itervalues", "iterkeys", "next", "long", "unicode",
-    "raise", "xrange", "basestring", "six_moves", "stringio", "urllib"))
-
 # Modules of the Python standard library
 STDLIB_MODULES = (
     "copy", "re", "sys", "unittest", "heapq", "glob", "os", "string",
@@ -21,64 +17,15 @@ STDLIB_MODULES = (
 
 # Name prefix of third-party modules (ex: "oslo" matches "osloconfig"
 # and "oslo.db")
-THIRD_PARTY_MODULES = ("oslo", "webob", "subunit", "testtools", "eventlet", "mock")
+THIRD_PARTY_MODULES = (
+    "oslo", "webob", "subunit", "testtools", "eventlet", "mock")
 
 # Modules of the application
-APPLICATION_MODULES = ("nova", "ceilometer", "glance", "neutron", "cinder", "swift")
-
-SIX_MOVES = {
-    # Python 2 import => six.moves import
-    'BaseHTTPServer': 'BaseHTTPServer',
-    'ConfigParser': 'configparser',
-    'Cookie': 'http_cookies',
-    'HTMLParser': 'html_parser',
-    'Queue': 'queue',
-    'SimpleHTTPServer': 'SimpleHTTPServer',
-    'SimpleXMLRPCServer': 'xmlrpc_server',
-    '__builtin__': 'builtins',
-    'cookielib': 'http_cookiejar',
-    'htmlentitydefs': 'html_entities',
-    'httplib': 'http_client',
-    'repr': 'reprlib',
-#    'thread': '_thread',
-    'xmlrpclib': 'xmlrpc_client',
-}
-
-SIX_MOVES_URLLIB = {
-    # six.moves.urllib submodule => Python 2 urllib/urllib2 symbols
-    'error': (
-        'HTTPError',
-        'URLError',
-    ),
-
-    'request': (
-        'HTTPBasicAuthHandler',
-        'HTTPCookieProcessor',
-        'HTTPPasswordMgrWithDefaultRealm',
-        'HTTPSHandler',
-        'ProxyHandler',
-        'Request',
-        'build_opener',
-        'install_opener',
-        'pathname2url',
-        'urlopen',
-    ),
-
-    'parse': (
-        'quote',
-        'unquote',
-        'urlencode',
-    ),
-}
-URLLIB = {}
-for submodule, symbols in SIX_MOVES_URLLIB.items():
-    for symbol in symbols:
-        URLLIB[symbol] = submodule
-URLLIB_UNCHANGED = set('urllib.%s' % submodule
-                       for submodule in SIX_MOVES_URLLIB)
+APPLICATION_MODULES = (
+    "nova", "ceilometer", "glance", "neutron", "cinder", "swift")
 
 # Ugly regular expressions because I'm too lazy to write a real parser,
-# and Match Object are convinient to modify code in-place
+# and Match objects are convinient to modify code in-place
 
 def import_regex(name):
     return re.compile(r"^import %s\n" % name, re.MULTILINE)
@@ -86,8 +33,7 @@ def import_regex(name):
 def from_import_regex(module, symbol):
     return re.compile(r"^from %s import %s\n" % (module, symbol), re.MULTILINE)
 
-
-# 'inst'
+# 'identifier'
 IDENTIFIER_REGEX = r'[a-zA-Z_][a-zA-Z0-9_]*'
 # '[0]'
 GETITEM_REGEX = r'\[[^]]+\]'
@@ -102,110 +48,12 @@ EXPR_REGEX = r'%s(?:\.%s)*' % (SUBEXPR_REGEX, SUBEXPR_REGEX)
 # '(...)'
 SUBPARENT_REGEX= r'\([^()]+\)'
 # '(...)' or '(...(...)...)' (max: 1 level of nested parenthesis)
-PARENT_REGEX= r'\([^()]*(?:%s)?[^()]*\)' % SUBPARENT_REGEX
+PARENT_REGEX = r'\([^()]*(?:%s)?[^()]*\)' % SUBPARENT_REGEX
 IMPORT_GROUP_REGEX = re.compile(r"^(?:import|from) .*?\n\n",
                                 re.MULTILINE | re.DOTALL)
 IMPORT_NAME_REGEX = re.compile(r"^(?:import|from) (%s)" % IDENTIFIER_REGEX,
                                re.MULTILINE)
-IMPORT_SIX_REGEX = re.compile(r"^import six$", re.MULTILINE)
-ITERITEMS_REGEX = re.compile(r"(%s)\.iteritems\(\)" % EXPR_REGEX)
-ITERVALUES_REGEX = re.compile(r"(%s)\.itervalues\(\)" % EXPR_REGEX)
-ITERKEYS_REGEX = re.compile(r"(%s)\.iterkeys\(\)" % EXPR_REGEX)
-ITERITEMS_LINE_REGEX = re.compile(r"^.*\biteritems *\(.*$", re.MULTILINE)
-ITERVALUES_LINE_REGEX = re.compile(r"^.*\bitervalues *\(.*$", re.MULTILINE)
-ITERKEYS_LINE_REGEX = re.compile(r"^.*\biterkeys *\(.*$", re.MULTILINE)
-# Match 'gen.next()' and '(...).next()'
-NEXT_REGEX = re.compile(r"(%s|%s)\.next\(\)" % (EXPR_REGEX, PARENT_REGEX))
-NEXT_LINE_REGEX = re.compile(r"^.*\.next *\(.*$", re.MULTILINE)
-DEF_NEXT_LINE_REGEX = re.compile(r"^.*def next *\(.*$", re.MULTILINE)
 
-SIX_MOVES_REGEX = ("(%s)" % '|'.join(sorted(map(re.escape, SIX_MOVES.keys()))))
-FROM_REGEX = r"(%s(?:, %s)*)" % (IDENTIFIER_REGEX, IDENTIFIER_REGEX)
-IMPORT_REGEX = re.compile(r"^import %s\n\n?" % SIX_MOVES_REGEX, re.MULTILINE)
-FROM_IMPORT_REGEX = re.compile(r"^from %s import %s" % (SIX_MOVES_REGEX, FROM_REGEX), re.MULTILINE)
-# 'import StringIO'
-IMPORT_STRINGIO_REGEX = import_regex(r"StringIO")
-# 'from StringIO import StringIO'
-FROM_IMPORT_STRINGIO_REGEX = from_import_regex(r"StringIO", r"StringIO")
-# 'from StringIO import StringIO'
-FROM_IMPORT_CSTRINGIO_REGEX = from_import_regex(r"cStringIO", r"StringIO")
-# 'import cStringIO'
-IMPORT_CSTRINGIO_REGEX = import_regex(r"cStringIO")
-# 'import cStringIO as StringIO'
-IMPORT_CSTRINGIO_AS_REGEX = import_regex(r"cStringIO as StringIO")
-# 'StringIO.', 'cStringIO.', but not 'six.StringIO' or 'six.cStringIO'
-CSTRINGIO_REGEX = re.compile(r'(?<!six\.)\bc?StringIO\.')
-# 'import urllib', 'import urllib2'
-IMPORT_URLLIB_REGEX = import_regex(r"\burllib2?\b")
-
-# 'urllib2' but not 'urllib2.parse_http_list'
-URLLIB2_REGEX = re.compile(r"\burllib2\b(?!\.parse_http_list)")
-# urllib.attr or urllib2.attr
-URLLIB_ATTR_REGEX = re.compile(r"\burllib2?\.(%s)" % IDENTIFIER_REGEX)
-
-# '123L' but not '0123L'
-LONG_REGEX = re.compile(r"\b([1-9][0-9]*|0)L")
-# '123L', '0123L'
-LONG_LINE_REGEX = re.compile(r"^.*\b[0-9]+L.*$", re.MULTILINE)
-
-UNICODE_REGEX = re.compile(r'\bunicode\b')
-DEF_REGEX = re.compile(r'^ *def +%s *\(' % IDENTIFIER_REGEX, re.MULTILINE)
-
-# 'raise a, b, c' expr
-RAISE3_REGEX = re.compile(r"raise (%s), (%s), (%s)"
-                          % (EXPR_REGEX, EXPR_REGEX, EXPR_REGEX))
-# 'raise a, b' expr
-RAISE2_REGEX = re.compile(r'''raise (%s), (%s|'[^']+'|"[^"]+")$'''
-                          % (EXPR_REGEX, EXPR_REGEX), re.MULTILINE)
-# 'raise a,' line
-RAISE_LINE_REGEX = re.compile(r"^.*raise %s,.*$" % EXPR_REGEX, re.MULTILINE)
-
-# 'xrange(2)'
-XRANGE1_REGEX = re.compile(r"xrange\(([0-9]+)\)")
-XRANGE2_REGEX = re.compile(r"xrange\(([0-9]+), ([0-9]+)\)")
-
-# basestring
-BASESTRING_REGEX = re.compile(r"\bbasestring\b")
-
-
-def iteritems_replace(regs):
-    return 'six.iteritems(%s)' % regs.group(1)
-
-
-def itervalues_replace(regs):
-    return 'six.itervalues(%s)' % regs.group(1)
-
-
-def iterkeys_replace(regs):
-    return 'six.iterkeys(%s)' % regs.group(1)
-
-
-def next_replace(regs):
-    expr = regs.group(1)
-    if expr.startswith('(') and expr.endswith(')'):
-        expr = expr[1:-1]
-    return 'next(%s)' % expr
-
-
-def long_replace(regs):
-    return regs.group(1)
-
-
-def raise2_replace(regs):
-    return 'raise %s(%s)' % (regs.group(1), regs.group(2))
-
-
-def raise3_replace(regs):
-    exc_type = regs.group(1)
-    exc_value = regs.group(2)
-    exc_tb = regs.group(3)
-    if (exc_type.endswith('[0]')
-        and exc_value.endswith('[1]')
-        and exc_tb.endswith('[2]')):
-        return ('six.reraise(*%s)' % exc_type[:-3])
-
-    return ('six.reraise(%s, %s, %s)'
-            % (exc_type, exc_value, exc_tb))
 
 
 def parse_import_groups(content):
@@ -237,33 +85,566 @@ def parse_import(line):
         raise SyntaxError("unable to parse import %r" % line)
 
 
-def replace_urllib(regs):
-    text = regs.group(0)
-    if text in URLLIB_UNCHANGED :
-        return text
-    name = regs.group(1)
-    if name == 'parse_http_list':
-        # six has no helper for parse_http_list() yet
-        return text
-    try:
-        submodule = URLLIB[name]
-    except KeyError:
-        raise Exception("unknown urllib symbol: %s" % text)
-    return 'urllib.%s.%s' % (submodule, name)
-
-
 def get_line(content, pos):
     eol = content.find("\n", pos)
     return content[pos:eol + 1]
 
 
-class Patcher(object):
+class Operation:
+    NAME = "name"
+
+    def __init__(self, patcher):
+        self.patcher = patcher
+
+    def patch(self, content):
+        raise NotImplementedError
+
+    def check(self, content):
+        raise NotImplementedError
+
+
+class Iteritems(Operation):
+    NAME = "iteritems"
+    DOC = "replace dict.iteritems() with six.iteritems(dict)"
+
+    REGEX = re.compile(r"(%s)\.iteritems\(\)" % EXPR_REGEX)
+    CHECK_REGEX = re.compile(r"^.*\biteritems *\(.*$", re.MULTILINE)
+
+    def replace(self, regs):
+        return 'six.iteritems(%s)' % regs.group(1)
+
+    def patch(self, content):
+        new_content = self.REGEX.sub(self.replace, content)
+        if new_content == content:
+            return content
+        return self.patcher.add_import_six(new_content)
+
+    def check(self, content):
+        for match in self.CHECK_REGEX.finditer(content):
+            line = match.group(0)
+            if "six.iteritems" not in line:
+                self.patcher.warn_line(line)
+
+
+class Itervalues(Operation):
+    NAME = "itervalues"
+    DOC = "replace dict.itervalues() with six.itervalues(dict)"
+
+    REGEX = re.compile(r"(%s)\.itervalues\(\)" % EXPR_REGEX)
+    CHECK_REGEX = re.compile(r"^.*\bitervalues *\(.*$", re.MULTILINE)
+
+    def replace(self, regs):
+        return 'six.itervalues(%s)' % regs.group(1)
+
+    def patch(self, content):
+        new_content = self.REGEX.sub(self.replace, content)
+        if new_content == content:
+            return content
+        return self.patcher.add_import_six(new_content)
+
+    def check(self, content):
+        for match in self.CHECK_REGEX.finditer(content):
+            line = match.group(0)
+            if "six.itervalues" not in line:
+                self.patcher.warn_line(line)
+
+
+class Iterkeys(Operation):
+    NAME = "iterkeys"
+    DOC = "replace dict.iterkeys() with six.iterkeys(dict)"
+
+    REGEX = re.compile(r"(%s)\.iterkeys\(\)" % EXPR_REGEX)
+    CHECK_REGEX = re.compile(r"^.*\biterkeys *\(.*$", re.MULTILINE)
+
+    def replace(self, regs):
+        return 'six.iterkeys(%s)' % regs.group(1)
+
+    def patch(self, content):
+        new_content = self.REGEX.sub(self.replace, content)
+        if new_content == content:
+            return content
+        return self.patcher.add_import_six(new_content)
+
+    def check(self, content):
+        for match in self.CHECK_REGEX.finditer(content):
+            line = match.group(0)
+            if "six.iterkeys" not in line:
+                self.patcher.warn_line(line)
+
+
+class Next(Operation):
+    NAME = "next"
+    DOC = "replace it.next() with next(it)"
+
+    # Match 'gen.next()' and '(...).next()'
+    REGEX = re.compile(r"(%s|%s)\.next\(\)" % (EXPR_REGEX, PARENT_REGEX))
+
+    CHECK_REGEX = re.compile(r"^.*\.next *\(.*$", re.MULTILINE)
+    DEF_NEXT_LINE_REGEX = re.compile(r"^.*def next *\(.*$", re.MULTILINE)
+
+    def replace(self, regs):
+        expr = regs.group(1)
+        if expr.startswith('(') and expr.endswith(')'):
+            expr = expr[1:-1]
+        return 'next(%s)' % expr
+
+    def patch(self, content):
+        return self.REGEX.sub(self.replace, content)
+
+    def check(self, content):
+        for match in self.CHECK_REGEX.finditer(content):
+            self.patcher.warn_line(match.group(0))
+        for match in self.DEF_NEXT_LINE_REGEX.finditer(content):
+            self.patcher.warn_line(match.group(0))
+
+
+class Long(Operation):
+    NAME = "long"
+    DOC = "replace 123L with 123"
+
+    # '123L' but not '0123L'
+    REGEX = re.compile(r"\b([1-9][0-9]*|0)L")
+
+    # '123L', '0123L'
+    CHECK_REGEX = re.compile(r"^.*\b[0-9]+L.*$", re.MULTILINE)
+
+    def replace(self, regs):
+        return regs.group(1)
+
+    def patch(self, content):
+        return self.REGEX.sub(self.replace, content)
+
+    def check(self, content):
+        for match in self.CHECK_REGEX.finditer(content):
+            self.patcher.warn_line(match.group(0))
+
+
+class Unicode(Operation):
+    NAME = "unicode"
+    DOC = "replace unicode with six.text_type"
+
+    UNICODE_REGEX = re.compile(r'\bunicode\b')
+
+    DEF_REGEX = re.compile(r'^ *def +%s *\(' % IDENTIFIER_REGEX, re.MULTILINE)
+
+    def _patch_line(self, line, start, end):
+        result = None
+        while True:
+            match = self.UNICODE_REGEX.search(line, start, end)
+            if not match:
+                return result
+            line = line[:match.start()] + "six.text_type" + line[match.end():]
+            result = line
+            start = match.start() + len("six.text_type")
+            end += len("six.text_type") - len("unicode")
+
+    def patch(self, content):
+        modified = False
+        lines = content.splitlines(True)
+        for index, line in enumerate(lines):
+            # Ugly heuristic to exclude "import ...", "from ... import ...",
+            # function name in "def ...(", comments and strings
+            # declared with """
+            if line.startswith(("import ", "from ")):
+                continue
+            start = 0
+            end = line.find("#")
+            if end < 0:
+                end = len(line)
+
+            pos = line.find('"""', start, end)
+            if pos != -1:
+                end = pos
+
+            match = self.DEF_REGEX.search(line, start, end)
+            if match:
+                start = match.end()
+
+            new_line = self._patch_line(line, start, end)
+            if new_line is not None:
+                lines[index] = new_line
+                modified = True
+        if not modified:
+            return content
+
+        return self.patcher.add_import_six(''.join(lines))
+
+    def check(self, content):
+        for line in content.splitlines():
+            end = line.find("#")
+            if end >= 0:
+                match = self.UNICODE_REGEX.search(line, 0, end)
+            else:
+                match = self.UNICODE_REGEX.search(line, 0)
+            if match:
+                self.patcher.warn_line(line)
+
+
+class Xrange(Operation):
+    NAME = "xrange"
+    DOC = "replace xrange() with range() using 'from six import range'"
+
+    # 'xrange(2)'
+    XRANGE1_REGEX = re.compile(r"xrange\(([0-9]+)\)")
+    XRANGE2_REGEX = re.compile(r"xrange\(([0-9]+), ([0-9]+)\)")
+
+    def patch(self, content):
+        need_six = False
+
+        def xrange1_replace(regs):
+            nonlocal need_six
+            end = int(regs.group(1))
+            if end > self.patcher.max_range:
+                need_six = True
+            return 'range(%s)' % end
+
+        def xrange2_replace(regs):
+            nonlocal need_six
+            start = int(regs.group(1))
+            end = int(regs.group(2))
+            if (end - start) > self.patcher.max_range:
+                need_six = True
+            return 'range(%s, %s)' % (start, end)
+
+        new_content = self.XRANGE1_REGEX.sub(xrange1_replace, content)
+        new_content = self.XRANGE2_REGEX.sub(xrange2_replace, new_content)
+
+        new_content2 = new_content.replace("xrange(", "range(")
+        if new_content2 != new_content:
+            need_six = True
+        new_content = new_content2
+
+        if need_six:
+            new_content = self.patcher.add_import(new_content, 'from six.moves import range')
+        return new_content
+
+    def check(self, content):
+        for line in content.splitlines():
+            if 'xrange' in line:
+                self.patcher.warn_line(line)
+
+
+class Basestring(Operation):
+    NAME = "basestring"
+    DOC = "replace basestring with six.string_types"
+
+    # match 'basestring' word
+    BASESTRING_REGEX = re.compile(r"\bbasestring\b")
+
+    def patch(self, content):
+        new_content = self.BASESTRING_REGEX.sub('six.string_types', content)
+        if new_content == content:
+            return content
+        return self.patcher.add_import_six(new_content)
+
+    def check(self, content):
+        for line in content.splitlines():
+            if 'basestring' in line:
+                self.patcher.warn_line(line)
+
+
+class Stringio(Operation):
+    NAME = "stringio"
+    DOC = ("replace StringIO.StringIO with six.StringIO"
+           " and cStringIO.StringIO with six.moves.cStringIO")
+
+    # 'import StringIO'
+    IMPORT_STRINGIO_REGEX = import_regex(r"StringIO")
+
+    # 'from StringIO import StringIO'
+    FROM_IMPORT_STRINGIO_REGEX = from_import_regex(r"StringIO", r"StringIO")
+
+    # 'from StringIO import StringIO'
+    FROM_IMPORT_CSTRINGIO_REGEX = from_import_regex(r"cStringIO", r"StringIO")
+
+    # 'import cStringIO'
+    IMPORT_CSTRINGIO_REGEX = import_regex(r"cStringIO")
+
+    # 'import cStringIO as StringIO'
+    IMPORT_CSTRINGIO_AS_REGEX = import_regex(r"cStringIO as StringIO")
+
+    # 'StringIO.', 'cStringIO.', but not 'six.StringIO' or 'six.cStringIO'
+    CSTRINGIO_REGEX = re.compile(r'(?<!six\.)\bc?StringIO\.')
+
+    def _patch_stringio1(self, content):
+        # Replace 'from StringIO import StringIO'
+        # with 'from six import StringIO'
+        new_content = self.FROM_IMPORT_STRINGIO_REGEX.sub('', content)
+        if new_content == content:
+            return content
+        return self.patcher.add_import(new_content, 'from six import StringIO')
+
+    def _patch_stringio2(self, content):
+        # Replace 'import StringIO' + 'StringIO.StringIO'
+        # with 'import six' + 'six.StringIO'
+        new_content = self.IMPORT_STRINGIO_REGEX.sub('', content)
+        if new_content == content:
+            return content
+
+        new_content = self.patcher.add_import_six(new_content)
+        return new_content.replace("StringIO.StringIO", "six.StringIO")
+
+    def _patch_cstringio1(self, content):
+        # Replace 'from cStringIO import StringIO'
+        # with 'from six.moves import cStringIO as StringIO'
+        new_content = self.FROM_IMPORT_CSTRINGIO_REGEX.sub('', content)
+        if new_content == content:
+            return content
+
+        new_content = self.patcher.add_import(new_content,
+                                      "from six.moves import cStringIO as StringIO")
+        return new_content
+
+    def _patch_cstringio2(self, content):
+        # Replace 'import cStringIO' + 'cStringIO.StringIO'
+        # with 'from six import moves' + 'moves.cStringIO'
+        new_content = self.IMPORT_CSTRINGIO_REGEX.sub('', content)
+        if new_content == content:
+            return content
+
+        new_content = self.patcher.add_import(new_content, "from six import moves")
+        return new_content.replace("cStringIO.StringIO", "moves.cStringIO")
+
+    def _patch_cstringio3(self, content):
+        # Replace 'import cStringIO as StringIO' + 'StringIO.StringIO'
+        # with 'from six import moves' + 'moves.cStringIO'
+        new_content = self.IMPORT_CSTRINGIO_AS_REGEX.sub('', content)
+        if new_content == content:
+            return content
+
+        new_content = self.patcher.add_import(new_content, "from six import moves")
+        return new_content.replace("StringIO.StringIO", "moves.cStringIO")
+
+    def patch(self, content):
+        content = self._patch_stringio1(content)
+        content = self._patch_stringio2(content)
+        content = self._patch_cstringio1(content)
+        content = self._patch_cstringio2(content)
+        content = self._patch_cstringio3(content)
+        return content
+
+    def check(self, content):
+        for line in content.splitlines():
+            if 'StringIO.StringIO' in line or self.CSTRINGIO_REGEX.search(line):
+                self.patcher.warn_line(line)
+
+
+class Urllib(Operation):
+    NAME = "urllib"
+    DOC = "replace urllib and urllib2 with six.moves.urllib"
+
+    # 'import urllib', 'import urllib2'
+    IMPORT_URLLIB_REGEX = import_regex(r"\burllib2?\b")
+
+    # urllib.attr or urllib2.attr
+    URLLIB_ATTR_REGEX = re.compile(r"\burllib2?\.(%s)" % IDENTIFIER_REGEX)
+
+    # 'urllib2' but not 'urllib2.parse_http_list'
+    URLLIB2_REGEX = re.compile(r"\burllib2\b(?!\.parse_http_list)")
+
+    SIX_MOVES_URLLIB = {
+        # six.moves.urllib submodule => Python 2 urllib/urllib2 symbols
+        'error': (
+            'HTTPError',
+            'URLError',
+        ),
+
+        'request': (
+            'HTTPBasicAuthHandler',
+            'HTTPCookieProcessor',
+            'HTTPPasswordMgrWithDefaultRealm',
+            'HTTPSHandler',
+            'ProxyHandler',
+            'Request',
+            'build_opener',
+            'install_opener',
+            'pathname2url',
+            'urlopen',
+        ),
+
+        'parse': (
+            'quote',
+            'unquote',
+            'urlencode',
+        ),
+    }
+
+    URLLIB = {}
+    for submodule, symbols in SIX_MOVES_URLLIB.items():
+        for symbol in symbols:
+            URLLIB[symbol] = submodule
+    URLLIB_UNCHANGED = set('urllib.%s' % submodule
+                           for submodule in SIX_MOVES_URLLIB)
+
+    def replace(self, regs):
+        text = regs.group(0)
+        if text in self.URLLIB_UNCHANGED:
+            return text
+        name = regs.group(1)
+        if name == 'parse_http_list':
+            # six has no helper for parse_http_list() yet
+            return text
+        try:
+            submodule = self.URLLIB[name]
+        except KeyError:
+            raise Exception("unknown urllib symbol: %s" % text)
+        return 'urllib.%s.%s' % (submodule, name)
+
+    def patch(self, content):
+        if ('from six.moves import urllib' in content
+            or 'six.moves.urllib' in content):
+            return content
+
+        new_content = self.IMPORT_URLLIB_REGEX.sub('', content)
+        new_content = self.URLLIB_ATTR_REGEX.sub(self.replace, new_content)
+        new_content = self.URLLIB2_REGEX.sub('urllib', new_content)
+        if new_content == content:
+            return content
+
+        return self.patcher.add_import(new_content,
+                                       "from six.moves import urllib")
+
+    def check(self, content):
+        for line in content.splitlines():
+            if 'urllib2.parse_http_list' in line:
+                self.patcher.warn_line(line)
+
+
+class Raise(Operation):
+    NAME = "raise"
+    DOC = ("replace 'raise exc, msg' with 'raise exc(msg)'"
+           " and replace 'raise a, b, c' with 'six.reraise(a, b, c)'")
+
+    # 'raise a, b, c' expr
+    RAISE3_REGEX = re.compile(r"raise (%s), (%s), (%s)"
+                              % (EXPR_REGEX, EXPR_REGEX, EXPR_REGEX))
+    # 'raise a, b' expr
+    RAISE2_REGEX = re.compile(r'''raise (%s), (%s|'[^']+'|"[^"]+")$'''
+                              % (EXPR_REGEX, EXPR_REGEX), re.MULTILINE)
+    # 'raise a,' line
+    RAISE_LINE_REGEX = re.compile(r"^.*raise %s,.*$" % EXPR_REGEX,
+                                  re.MULTILINE)
+
+    def raise2_replace(self, regs):
+        return 'raise %s(%s)' % (regs.group(1), regs.group(2))
+
+    def raise3_replace(self, regs):
+        exc_type = regs.group(1)
+        exc_value = regs.group(2)
+        exc_tb = regs.group(3)
+        if (exc_type.endswith('[0]')
+            and exc_value.endswith('[1]')
+            and exc_tb.endswith('[2]')):
+            return ('six.reraise(*%s)' % exc_type[:-3])
+
+        return ('six.reraise(%s, %s, %s)'
+                % (exc_type, exc_value, exc_tb))
+
+    def patch(self, content):
+        old_content = content
+        content = self.RAISE2_REGEX.sub(self.raise2_replace, content)
+        new_content = self.RAISE3_REGEX.sub(self.raise3_replace, content)
+        if new_content != content:
+            content = self.patcher.add_import_six(new_content)
+        return content
+
+    def check(self, content):
+        for match in self.RAISE_LINE_REGEX.finditer(content):
+            self.patcher.warn_line(match.group(0))
+
+
+class SixMoves(Operation):
+    NAME = "six_moves"
+    DOC = ("replace Python 2 imports with six.moves imports")
+
+    SIX_MOVES = {
+        # Python 2 import => six.moves import
+        'BaseHTTPServer': 'BaseHTTPServer',
+        'ConfigParser': 'configparser',
+        'Cookie': 'http_cookies',
+        'HTMLParser': 'html_parser',
+        'Queue': 'queue',
+        'SimpleHTTPServer': 'SimpleHTTPServer',
+        'SimpleXMLRPCServer': 'xmlrpc_server',
+        '__builtin__': 'builtins',
+        'cookielib': 'http_cookiejar',
+        'htmlentitydefs': 'html_entities',
+        'httplib': 'http_client',
+        'repr': 'reprlib',
+    #    'thread': '_thread',
+        'xmlrpclib': 'xmlrpc_client',
+    }
+
+    SIX_MOVES_REGEX = ("(%s)" % '|'.join(sorted(map(re.escape, SIX_MOVES.keys()))))
+    IMPORT_REGEX = re.compile(r"^import %s\n\n?" % SIX_MOVES_REGEX,
+                              re.MULTILINE)
+    FROM_REGEX = r"(%s(?:, %s)*)" % (IDENTIFIER_REGEX, IDENTIFIER_REGEX)
+    FROM_IMPORT_REGEX = re.compile(r"^from %s import %s"
+                            % (SIX_MOVES_REGEX, FROM_REGEX),
+                            re.MULTILINE)
+
+    def patch(self, content):
+        add_imports = []
+        replace = []
+
+        def replace_import(regs):
+            name = regs.group(1)
+            new_name = self.SIX_MOVES[name]
+            line = 'from six.moves import %s' % new_name
+            add_imports.append(line)
+            replace.append((name, new_name))
+            return ''
+
+        def replace_from(regs):
+            new_name = self.SIX_MOVES[regs.group(1)]
+            line = 'from six.moves.%s import %s' % (new_name, regs.group(2))
+            add_imports.append(line)
+            return ''
+
+        new_content = self.IMPORT_REGEX.sub(replace_import, content)
+        new_content = self.FROM_IMPORT_REGEX.sub(replace_from, new_content)
+        for old_name, new_name in replace:
+            # Only match words
+            regex = r'\b%s\b' % re.escape(old_name)
+            new_content = re.sub(regex, new_name, new_content)
+        for line in add_imports:
+            names = parse_import(line)
+            new_content = self.patcher.add_import_names(new_content, line,
+                                                        names)
+        return new_content
+
+    def check(self, content):
+        pass
+
+
+OPERATIONS = (
+    Iteritems,
+    Itervalues,
+    Iterkeys,
+    Next,
+    Long,
+    Unicode,
+    Xrange,
+    Basestring,
+    Stringio,
+    Urllib,
+    Raise,
+    SixMoves,
+)
+OPERATION_NAMES = set(operation.NAME for operation in OPERATIONS)
+OPERATION_BY_NAME = {operation.NAME: operation for operation in OPERATIONS}
+
+
+class Patcher:
+    IMPORT_SIX_REGEX = re.compile(r"^import six$", re.MULTILINE)
+
     def __init__(self, operations):
         operations = set(operations)
         if 'all' in operations:
-            operations |= set(OPERATIONS)
+            operations |= set(OPERATION_NAMES)
             operations.discard('all')
-        self.operations = operations
+        self.operations = [OPERATION_BY_NAME[name](self)
+                           for name in operations]
         self.warnings = []
         self.current_file = None
         self.max_range = MAX_RANGE
@@ -288,7 +669,7 @@ class Patcher(object):
             for filename in self._walk(path):
                 yield filename
 
-    def _add_import(self, content, import_line, import_names):
+    def add_import_names(self, content, import_line, import_names):
         create_new_import_group = None
 
         import_groups = parse_import_groups(content)
@@ -348,33 +729,15 @@ class Patcher(object):
         return content[:pos] + import_line + '\n' + content[pos:]
 
     def add_import_six(self, content):
-        if IMPORT_SIX_REGEX.search(content):
+        if self.IMPORT_SIX_REGEX.search(content):
             return content
-        return self._add_import(content, 'import six', ['six'])
+        return self.add_import_names(content, 'import six', ['six'])
 
     def add_import(self, content, line):
         if re.search("^" + re.escape(line) + "$", content, flags=re.MULTILINE):
             return content
         names = parse_import(line)
-        return self._add_import(content, line, names)
-
-    def patch_iteritems(self, content):
-        new_content = ITERITEMS_REGEX.sub(iteritems_replace, content)
-        if new_content == content:
-            return content
-        return self.add_import_six(new_content)
-
-    def patch_itervalues(self, content):
-        new_content = ITERVALUES_REGEX.sub(itervalues_replace, content)
-        if new_content == content:
-            return content
-        return self.add_import_six(new_content)
-
-    def patch_iterkeys(self, content):
-        new_content = ITERKEYS_REGEX.sub(iterkeys_replace, content)
-        if new_content == content:
-            return content
-        return self.add_import_six(new_content)
+        return self.add_import_names(content, line, names)
 
     def _display_warning(self, warn):
         msg = "WARNING: %s: %s" % warn
@@ -385,268 +748,9 @@ class Patcher(object):
         self._display_warning(warn)
         self.warnings.append(warn)
 
-    def check_iteritems(self, content):
-        for match in ITERITEMS_LINE_REGEX.finditer(content):
-            line = match.group(0)
-            if "six.iteritems" not in line:
-                self.warn_line(line)
-
-    def check_itervalues(self, content):
-        for match in ITERVALUES_LINE_REGEX.finditer(content):
-            line = match.group(0)
-            if "six.itervalues" not in line:
-                self.warn_line(line)
-
-    def check_iterkeys(self, content):
-        for match in ITERKEYS_LINE_REGEX.finditer(content):
-            line = match.group(0)
-            if "six.iterkeys" not in line:
-                self.warn_line(line)
-
-    def patch_next(self, content):
-        return NEXT_REGEX.sub(next_replace, content)
-
-    def check_next(self, content):
-        for match in NEXT_LINE_REGEX.finditer(content):
-            self.warn_line(match.group(0))
-        for match in DEF_NEXT_LINE_REGEX.finditer(content):
-            self.warn_line(match.group(0))
-
-    def patch_long(self, content):
-        return LONG_REGEX.sub(long_replace, content)
-
-    def check_long(self, content):
-        for match in LONG_LINE_REGEX.finditer(content):
-            self.warn_line(match.group(0))
-
-    def patch_unicode_line(self, line, start, end):
-        result = None
-        while True:
-            match = UNICODE_REGEX.search(line, start, end)
-            if not match:
-                return result
-            line = line[:match.start()] + "six.text_type" + line[match.end():]
-            result = line
-            start = match.start() + len("six.text_type")
-            end += len("six.text_type") - len("unicode")
-
-    def patch_unicode(self, content):
-        modified = False
-        lines = content.splitlines(True)
-        for index, line in enumerate(lines):
-            # Ugly heuristic to exclude "import ...", "from ... import ...",
-            # function name in "def ...(", comments and strings
-            # declared with """
-            if line.startswith(("import ", "from ")):
-                continue
-            start = 0
-            end = line.find("#")
-            if end < 0:
-                end = len(line)
-
-            pos = line.find('"""', start, end)
-            if pos != -1:
-                end = pos
-
-            match = DEF_REGEX.search(line, start, end)
-            if match:
-                start = match.end()
-
-            new_line = self.patch_unicode_line(line, start, end)
-            if new_line is not None:
-                lines[index] = new_line
-                modified = True
-        if not modified:
-            return content
-
-        return self.add_import_six(''.join(lines))
-
-    def check_unicode(self, content):
-        for line in content.splitlines():
-            end = line.find("#")
-            if end >= 0:
-                match = UNICODE_REGEX.search(line, 0, end)
-            else:
-                match = UNICODE_REGEX.search(line, 0)
-            if match:
-                self.warn_line(line)
-
-    def patch_raise(self, content):
-        old_content = content
-        content = RAISE2_REGEX.sub(raise2_replace, content)
-        new_content = RAISE3_REGEX.sub(raise3_replace, content)
-        if new_content != content:
-            content = self.add_import_six(new_content)
-        return content
-
-    def check_raise(self, content):
-        for match in RAISE_LINE_REGEX.finditer(content):
-            self.warn_line(match.group(0))
-
-    def patch_xrange(self, content):
-        need_six = False
-
-        def xrange1_replace(regs):
-            nonlocal need_six
-            end = int(regs.group(1))
-            if end > self.max_range:
-                need_six = True
-            return 'range(%s)' % end
-
-        def xrange2_replace(regs):
-            nonlocal need_six
-            start = int(regs.group(1))
-            end = int(regs.group(2))
-            if (end - start) > self.max_range:
-                need_six = True
-            return 'range(%s, %s)' % (start, end)
-
-        new_content = XRANGE1_REGEX.sub(xrange1_replace, content)
-        new_content = XRANGE2_REGEX.sub(xrange2_replace, new_content)
-
-        new_content2 = new_content.replace("xrange(", "range(")
-        if new_content2 != new_content:
-            need_six = True
-        new_content = new_content2
-
-        if need_six:
-            new_content = self.add_import(new_content, 'from six.moves import range')
-        return new_content
-
-    def patch_basestring(self, content):
-        new_content = BASESTRING_REGEX.sub('six.string_types', content)
-        if new_content == content:
-            return content
-        return self.add_import_six(new_content)
-
-    def check_basestring(self, content):
-        for line in content.splitlines():
-            if 'basestring' in line:
-                self.warn_line(line)
-
-    def check_xrange(self, content):
-        for line in content.splitlines():
-            if 'xrange' in line:
-                self.warn_line(line)
-
-    def patch_six_moves(self, content):
-        add_imports = []
-        replace = []
-
-        def six_moves_import(regs):
-            name = regs.group(1)
-            new_name = SIX_MOVES[name]
-            line = 'from six.moves import %s' % new_name
-            add_imports.append(line)
-            replace.append((name, new_name))
-            return ''
-
-        def six_moves_from_import(regs):
-            new_name = SIX_MOVES[regs.group(1)]
-            line = 'from six.moves.%s import %s' % (new_name, regs.group(2))
-            add_imports.append(line)
-            return ''
-
-        new_content = IMPORT_REGEX.sub(six_moves_import,
-                                       content)
-        new_content = FROM_IMPORT_REGEX.sub(six_moves_from_import,
-                                            new_content)
-        for old_name, new_name in replace:
-            # Only match words
-            regex = r'\b%s\b' % re.escape(old_name)
-            new_content = re.sub(regex, new_name, new_content)
-        for line in add_imports:
-            names = parse_import(line)
-            new_content = self._add_import(new_content, line, names)
-        return new_content
-
-    def check_six_moves(self, content):
-        pass
-
-    def _patch_stringio1(self, content):
-        # Replace 'from StringIO import StringIO'
-        # with 'from six import StringIO'
-        new_content = FROM_IMPORT_STRINGIO_REGEX.sub('', content)
-        if new_content == content:
-            return content
-        return self.add_import(new_content, 'from six import StringIO')
-
-    def _patch_stringio2(self, content):
-        # Replace 'import StringIO' + 'StringIO.StringIO'
-        # with 'import six' + 'six.StringIO'
-        new_content = IMPORT_STRINGIO_REGEX.sub('', content)
-        if new_content == content:
-            return content
-
-        new_content = self.add_import_six(new_content)
-        return new_content.replace("StringIO.StringIO", "six.StringIO")
-
-    def _patch_cstringio1(self, content):
-        # Replace 'from cStringIO import StringIO'
-        # with 'from six.moves import cStringIO as StringIO'
-        new_content = FROM_IMPORT_CSTRINGIO_REGEX.sub('', content)
-        if new_content == content:
-            return content
-
-        new_content = self.add_import(new_content,
-                                      "from six.moves import cStringIO as StringIO")
-        return new_content
-
-    def _patch_cstringio2(self, content):
-        # Replace 'import cStringIO' + 'cStringIO.StringIO'
-        # with 'from six import moves' + 'moves.cStringIO'
-        new_content = IMPORT_CSTRINGIO_REGEX.sub('', content)
-        if new_content == content:
-            return content
-
-        new_content = self.add_import(new_content, "from six import moves")
-        return new_content.replace("cStringIO.StringIO", "moves.cStringIO")
-
-    def _patch_cstringio3(self, content):
-        # Replace 'import cStringIO as StringIO' + 'StringIO.StringIO'
-        # with 'from six import moves' + 'moves.cStringIO'
-        new_content = IMPORT_CSTRINGIO_AS_REGEX.sub('', content)
-        if new_content == content:
-            return content
-
-        new_content = self.add_import(new_content, "from six import moves")
-        return new_content.replace("StringIO.StringIO", "moves.cStringIO")
-
-    def patch_stringio(self, content):
-        content = self._patch_stringio1(content)
-        content = self._patch_stringio2(content)
-        content = self._patch_cstringio1(content)
-        content = self._patch_cstringio2(content)
-        content = self._patch_cstringio3(content)
-        return content
-
-    def check_stringio(self, content):
-        for line in content.splitlines():
-            if 'StringIO.StringIO' in line or CSTRINGIO_REGEX.search(line):
-                self.warn_line(line)
-
-    def patch_urllib(self, content):
-        if ('from six.moves import urllib' in content
-            or 'six.moves.urllib' in content):
-            return content
-
-        new_content = IMPORT_URLLIB_REGEX.sub('', content)
-        new_content = URLLIB_ATTR_REGEX.sub(replace_urllib, new_content)
-        new_content = URLLIB2_REGEX.sub('urllib', new_content)
-        if new_content == content:
-            return content
-
-        return self.add_import(new_content, "from six.moves import urllib")
-
-    def check_urllib(self, content):
-        for line in content.splitlines():
-            if 'urllib2.parse_http_list' in line:
-                self.warn_line(line)
-
     def check(self, content):
         for operation in self.operations:
-            checker = getattr(self, "check_" + operation)
-            checker(content)
+            operation.check(content)
 
     def patch(self, filename):
         self.current_file = filename
@@ -656,8 +760,7 @@ class Patcher(object):
 
         old_content = content
         for operation in self.operations:
-            patcher = getattr(self, "patch_" + operation)
-            content = patcher(content)
+            content = operation.patch(content)
 
         if content == old_content:
             # no change
@@ -692,7 +795,7 @@ def usage():
     print("usage: %s <operation> <file1> <file2> <...>" % sys.argv[0])
     print()
     print("operations:")
-    for operation in sorted(OPERATIONS):
+    for operation in sorted(OPERATION_NAMES):
         print("- %s" % operation)
     print()
     print("If a directory is passed, sixer finds .py files in subdirectories")
@@ -708,7 +811,7 @@ def main():
     operations = sys.argv[1].split(',')
     files = sys.argv[2:]
     for operation in operations:
-        if operation not in OPERATIONS:
+        if operation not in OPERATION_NAMES:
             print("invalid operation: %s" % operation)
             print()
             usage()
