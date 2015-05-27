@@ -167,6 +167,12 @@ Or run tests manually: type ``python3 tests.py``.
 Changelog
 ---------
 
+* 2015-05-27: Version 0.3.1
+
+  - Fix the "all" operation
+  - six_moves knows more modules
+  - urllib: add pathname2url, don't touch urllib2.parse_http_list()
+
 * 2015-05-27: Version 0.3
 
   - First command line parameter can now be a filename
