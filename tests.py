@@ -20,16 +20,16 @@ def replace_stdout():
 
 
 class TestOperations(unittest.TestCase):
-    # FIXME: test Patcher.walk
+    # TODO: test Patcher.walk
 
-    def setUp(self):
-        self.patcher = sixer.Patcher('.', "unset")
-
-    def check(self, operation, before, after):
+    def check(self, operation, before, after, **kw):
         before = textwrap.dedent(before).strip()
         after = textwrap.dedent(after).strip()
 
-        self.patcher.operations = (operation,)
+        self.patcher = sixer.Patcher('.', (operation,))
+        for attr, value in kw.items():
+            setattr(self.patcher, attr, value)
+
         with tempfile.NamedTemporaryFile("w+") as temp:
             temp.write(before)
             temp.flush()
@@ -79,14 +79,13 @@ class TestOperations(unittest.TestCase):
             for i in range(n): pass
             """)
 
-        self.patcher.max_range = 5
         self.check("xrange",
             "for i in xrange(10): pass",
             """
             from six.moves import range
 
             for i in range(10): pass
-            """)
+            """, max_range=5)
 
     def test_unicode(self):
         self.check("unicode",
@@ -305,6 +304,19 @@ class TestOperations(unittest.TestCase):
 
 
             m = urllib
+            """)
+
+    def test_all(self):
+        self.check("all",
+            """
+            values = (0L, 1L, 12L, 123L, 1234L, 12345L)
+
+            for i in xrange(10): pass
+            """,
+            """
+            values = (0, 1, 12, 123, 1234, 12345)
+
+            for i in range(10): pass
             """)
 
 

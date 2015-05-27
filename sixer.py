@@ -26,12 +26,20 @@ APPLICATION_MODULES = ("nova", "ceilometer", "glance", "neutron", "cinder")
 
 SIX_MOVES = {
     # Python 2 import => six.moves import
-    '__builtin__': 'builtins',
-    'ConfigParser': 'configparser',
     'BaseHTTPServer': 'BaseHTTPServer',
+    'ConfigParser': 'configparser',
+    'Cookie': 'http_cookies',
+    'HTMLParser': 'html_parser',
+    'Queue': 'queue',
+    'SimpleHTTPServer': 'SimpleHTTPServer',
+    'SimpleXMLRPCServer': 'xmlrpc_server',
+    '__builtin__': 'builtins',
+    'cookielib': 'http_cookiejar',
+    'htmlentitydefs': 'html_entities',
     'httplib': 'http_client',
     'repr': 'reprlib',
-    'Queue': 'queue',
+#    'thread': '_thread',
+    'xmlrpclib': 'xmlrpc_client',
 }
 
 SIX_MOVES_URLLIB = {
@@ -232,7 +240,7 @@ class Patcher(object):
     def __init__(self, path, operations):
         operations = set(operations)
         if 'all' in operations:
-            operations.extend(OPERATIONS)
+            operations |= set(OPERATIONS)
             operations.discard('all')
 
         self.path = path
