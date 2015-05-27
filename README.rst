@@ -52,7 +52,7 @@ Installation
 
 To install sixer, type::
 
-    pip install sixer
+    pip3 install sixer
 
 sixer requires Python 3, it doesn't work on Python 2.
 
