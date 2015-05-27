@@ -616,6 +616,8 @@ class Patcher(object):
                 print("ERROR while patching %s" % filename)
                 raise
 
+        if self.warnings:
+            print()
         for warning in self.warnings:
             print(warning)
 
