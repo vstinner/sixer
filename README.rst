@@ -134,6 +134,8 @@ Operations
 - ``cstringio``:
 
   * replace ``cStringIO.StringIO`` with ``moves.cStringIO``
+  * replace ``from cStringIO import StringIO``
+    with ``from six.moves import cStringIO as StringIO``
   * later you may have to replace it with ``six.BytesIO`` (or ``io.BytesIO``
     if you don't support Python 2.6) when bytes are expected on Python 3
 

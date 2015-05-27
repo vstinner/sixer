@@ -128,6 +128,8 @@ FROM_IMPORT_REGEX = re.compile(r"^from %s import %s" % (SIX_MOVES_REGEX, FROM_RE
 IMPORT_STRINGIO_REGEX = import_regex(r"StringIO")
 # 'from StringIO import StringIO'
 FROM_IMPORT_STRINGIO_REGEX = from_import_regex(r"StringIO", r"StringIO")
+# 'from StringIO import StringIO'
+FROM_IMPORT_CSTRINGIO_REGEX = from_import_regex(r"cStringIO", r"StringIO")
 # 'import cStringIO'
 IMPORT_CSTRINGIO_REGEX = import_regex(r"cStringIO")
 # 'import cStringIO as StringIO'
@@ -588,7 +590,18 @@ class Patcher(object):
             if 'StringIO.StringIO' in line:
                 self.warn_line(line)
 
-    def patch_cstringio(self, content):
+    def patch_cstringio1(self, content):
+        # Replace 'from cStringIO import StringIO'
+        # with 'from six.moves import cStringIO as StringIO'
+        new_content = FROM_IMPORT_CSTRINGIO_REGEX.sub('', content)
+        if new_content == content:
+            return content
+
+        new_content = self.add_import(new_content,
+                                      "from six.moves import cStringIO as StringIO")
+        return new_content
+
+    def patch_cstringio2(self, content):
         new_content = IMPORT_CSTRINGIO_REGEX.sub('', content)
         new_content2 = IMPORT_CSTRINGIO_AS_REGEX.sub('', new_content)
         if new_content2 == content:
@@ -604,6 +617,10 @@ class Patcher(object):
         if replace_stringio:
             new_content = new_content.replace("StringIO.StringIO", "moves.cStringIO")
         return new_content
+
+    def patch_cstringio(self, content):
+        content = self.patch_cstringio1(content)
+        return self.patch_cstringio2(content)
 
     def check_cstringio(self, content):
         for line in content.splitlines():

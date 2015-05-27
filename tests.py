@@ -309,24 +309,33 @@ class TestOperations(unittest.TestCase):
             s = moves.cStringIO()
             """)
 
-        # import StringIO as StringIO
+        # import cStringIO as StringIO
         self.check("cstringio",
             """
-            import StringIO
-            import cStringIO
+            import cStringIO as StringIO
 
-            s1 = StringIO.StringIO()
-            s2 = cStringIO.StringIO()
+            s = StringIO.StringIO()
             """,
             """
-            import StringIO
-
             from six import moves
 
-            s1 = StringIO.StringIO()
-            s2 = moves.cStringIO()
+
+            s = moves.cStringIO()
+            """)
+
+        # from cStringIO import StringIO
+        self.check("cstringio",
+            """
+            from cStringIO import StringIO
+
+            s = StringIO()
             """,
-            warnings=['s1 = StringIO.StringIO()'])
+            """
+            from six.moves import cStringIO as StringIO
+
+
+            s = StringIO()
+            """)
 
     def test_urllib(self):
         # urllib2.urlopen, urllib2.URLError
