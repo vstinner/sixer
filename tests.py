@@ -306,6 +306,12 @@ class TestOperations(unittest.TestCase):
             m = urllib
             """)
 
+        # don't touch parse_http_list
+        self.check_unchanged("urllib",
+            """
+            urllib2.parse_http_list()
+            """)
+
     def test_all(self):
         self.check("all",
             """

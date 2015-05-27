@@ -58,6 +58,7 @@ SIX_MOVES_URLLIB = {
         'Request',
         'build_opener',
         'install_opener',
+        'pathname2url',
         'urlopen',
     ),
 
@@ -120,8 +121,8 @@ FROM_IMPORT_REGEX = re.compile(r"^from %s import %s" % (SIX_MOVES_REGEX, FROM_RE
 IMPORT_STRINGIO_REGEX = import_regex(r"StringIO")
 IMPORT_URLLIB_REGEX = import_regex(r"\burllib2?\b")
 
-# 'urllib2'
-URLLIB2_REGEX = re.compile(r"\burllib2\b")
+# 'urllib2' but not 'urllib2.parse_http_list'
+URLLIB2_REGEX = re.compile(r"\burllib2\b(?!\.parse_http_list)")
 # urllib.attr or urllib2.attr
 URLLIB_ATTR_REGEX = re.compile(r"\burllib2?\.(%s)" % IDENTIFIER_REGEX)
 
@@ -224,6 +225,9 @@ def replace_urllib(regs):
     if text in URLLIB_UNCHANGED :
         return text
     name = regs.group(1)
+    if name == 'parse_http_list':
+        # six has no helper for parse_http_list() yet
+        return text
     try:
         submodule = URLLIB[name]
     except KeyError:
@@ -356,8 +360,9 @@ class Patcher(object):
         return (True, new_content)
 
     def warn_line(self, line):
-        self.warnings.append("%s: %s"
-                             % (self.current_file, line.strip()))
+        msg = "WARNING: %s: %s" % (self.current_file, line.strip())
+        print(msg)
+        self.warnings.append(msg)
 
     def check_iteritems(self, content):
         for match in ITERITEMS_LINE_REGEX.finditer(content):
@@ -569,7 +574,9 @@ class Patcher(object):
         return (True, new_content)
 
     def check_urllib(self, content):
-        pass
+        for line in content.splitlines():
+            if 'urllib2.parse_http_list' in line:
+                self.warn_line(line)
 
     def check(self, content):
         for operation in self.operations:
@@ -610,7 +617,7 @@ class Patcher(object):
                 raise
 
         for warning in self.warnings:
-            print("WARNING: %s" % warning)
+            print(warning)
 
 
 def usage():
