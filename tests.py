@@ -25,23 +25,30 @@ class TestOperations(unittest.TestCase):
     def check(self, operation, before, after, **kw):
         before = textwrap.dedent(before).strip()
         after = textwrap.dedent(after).strip()
+        warnings = kw.pop('warnings', None)
 
-        self.patcher = sixer.Patcher('.', (operation,))
+        patcher = sixer.Patcher('.', (operation,))
         for attr, value in kw.items():
-            setattr(self.patcher, attr, value)
+            setattr(patcher, attr, value)
 
         with tempfile.NamedTemporaryFile("w+") as temp:
             temp.write(before)
             temp.flush()
             with replace_stdout():
-                self.patcher.patch(temp.name)
+                patcher.patch(temp.name)
             temp.seek(0)
             code = temp.read()
 
         self.assertEqual(code, after)
+        if warnings:
+            self.assertEqual(len(patcher.warnings), len(warnings))
+            for index, msg in enumerate(warnings):
+                self.assertEqual(patcher.warnings[index][1], msg)
+        else:
+            self.assertEqual(patcher.warnings, [])
 
-    def check_unchanged(self, operation, code):
-        self.check(operation, code, code)
+    def check_unchanged(self, operation, code, **kw):
+        self.check(operation, code, code, **kw)
 
     def test_raise2(self):
         self.check("raise",
@@ -228,7 +235,8 @@ class TestOperations(unittest.TestCase):
 
         # octal numbers are unchanged
         self.check_unchanged("long",
-            "values = (00L, 01L, 012L, 0123L, 01234L, 012345L)")
+            "values = (00L, 01L, 012L, 0123L, 01234L, 012345L)",
+            warnings=["values = (00L, 01L, 012L, 0123L, 01234L, 012345L)"])
 
     def test_basestring(self):
         self.check("basestring",
@@ -310,7 +318,8 @@ class TestOperations(unittest.TestCase):
         self.check_unchanged("urllib",
             """
             urllib2.parse_http_list()
-            """)
+            """,
+            warnings=['urllib2.parse_http_list()'])
 
     def test_all(self):
         self.check("all",
