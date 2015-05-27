@@ -29,12 +29,18 @@ better to use it in a project managed by a source control manager (ex: git).
 
 Available operations:
 
+- all
+- basestring
 - iteritems
+- iterkeys
 - itervalues
 - long
 - next
 - raise
+- six_moves
+- stringio
 - unicode
+- urllib
 - xrange
 
 
@@ -51,6 +57,14 @@ sixer requires Python 3, it doesn't work on Python 2.
 Operations
 ----------
 
+- ``all``:
+
+  * combine all operations all together
+
+- ``basestring``:
+
+  * replace ``basestring`` with ``six.string_types``
+
 - ``iteritems``:
 
   * replace ``dict.iteritems()`` with ``six.iteritems(dict)``
@@ -58,6 +72,12 @@ Operations
 - ``itervalues``:
 
   * replace ``dict.itervalues()`` with ``six.itervalues(dict)``
+
+- ``iterkeys``:
+
+  * replace ``dict.iterkeys()`` with ``six.iterkeys(dict)``
+  * note: ``for key in dict.iterkeys():`` can usually be simplified to
+    ``for key in dict:``
 
 - ``long``:
 
@@ -77,6 +97,28 @@ Operations
   * replace ``raise exc, msg``
     with ``raise exc(msg)``
 
+- ``six_moves``:
+
+  * replace Python 2 imports with imports from ``six.moves``
+  * Python 2 modules:
+
+    - BaseHTTPServer
+    - ConfigParser
+    - Queue
+    - __builtin__
+    - httplib
+    - repr
+
+- ``urllib``:
+
+  * replace Python 2 urllib and urllib2 with ``six.moves.urllib``
+
+- ``stringio``:
+
+  * replace ``StringIO.StringIO`` with ``six.StringIO``
+  * later you may have to replace it with ``six.StringIO`` when bytes are
+    expected on Python 3
+
 - ``unicode``:
 
   * replace ``unicode`` with ``six.text_type``
@@ -85,6 +127,7 @@ Operations
 
   * replace ``xrange()`` with ``range()`` and
     add ``from six.moves import range``
+  * don't add the import if all ranges have 1024 items or less
 
 
 Adding the six import
@@ -123,7 +166,8 @@ Changelog
 
 * Version 0.3
 
-  - Add "iterkeys", "six_moves", "stringio", "urllib" and "all" operations
+  - Add "all", "basestring", "iterkeys", "six_moves", "stringio", "urllib"
+    operations
   - Enhance the knownledge tables for modules (stdlib, third party,
     applications)
 
