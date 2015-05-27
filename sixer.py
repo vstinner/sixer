@@ -811,7 +811,7 @@ def main():
     operations = sys.argv[1].split(',')
     files = sys.argv[2:]
     for operation in operations:
-        if operation not in OPERATION_NAMES:
+        if (operation not in OPERATION_NAMES and operation != 'all'):
             print("invalid operation: %s" % operation)
             print()
             usage()
