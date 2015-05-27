@@ -63,6 +63,8 @@ URLLIB = {}
 for submodule, symbols in SIX_MOVES_URLLIB.items():
     for symbol in symbols:
         URLLIB[symbol] = submodule
+URLLIB_UNCHANGED = set('urllib.%s' % submodule
+                       for submodule in SIX_MOVES_URLLIB)
 
 # Ugly regular expressions because I'm too lazy to write a real parser,
 # and Match Object are convinient to modify code in-place
@@ -210,11 +212,14 @@ def parse_import(line):
 
 
 def replace_urllib(regs):
+    text = regs.group(0)
+    if text in URLLIB_UNCHANGED :
+        return text
     name = regs.group(1)
     try:
         submodule = URLLIB[name]
     except KeyError:
-        raise Exception("unknown urllib symbol: %s" % regs.group(0))
+        raise Exception("unknown urllib symbol: %s" % text)
     return 'urllib.%s.%s' % (submodule, name)
 
 
