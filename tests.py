@@ -294,9 +294,8 @@ class TestOperations(unittest.TestCase):
             s = StringIO()
             """)
 
-    def test_cstringio(self):
         # import cStringIO
-        self.check("cstringio",
+        self.check("stringio",
             """
             import cStringIO
 
@@ -310,7 +309,7 @@ class TestOperations(unittest.TestCase):
             """)
 
         # import cStringIO as StringIO
-        self.check("cstringio",
+        self.check("stringio",
             """
             import cStringIO as StringIO
 
@@ -324,7 +323,7 @@ class TestOperations(unittest.TestCase):
             """)
 
         # from cStringIO import StringIO
-        self.check("cstringio",
+        self.check("stringio",
             """
             from cStringIO import StringIO
 

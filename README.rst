@@ -34,7 +34,6 @@ Available operations:
 
 - all
 - basestring
-- cstringio
 - iteritems
 - iterkeys
 - itervalues
@@ -127,13 +126,8 @@ Operations
 - ``stringio``:
 
   * replace ``StringIO.StringIO`` with ``six.StringIO``
-  * replace ``from StringIO import StringIO`` with ``from six import StringIO``
-  * later you may have to replace it with ``six.BytesIO`` (or ``io.BytesIO``
-    if you don't support Python 2.6) when bytes are expected on Python 3
-
-- ``cstringio``:
-
   * replace ``cStringIO.StringIO`` with ``moves.cStringIO``
+  * replace ``from StringIO import StringIO`` with ``from six import StringIO``
   * replace ``from cStringIO import StringIO``
     with ``from six.moves import cStringIO as StringIO``
   * later you may have to replace it with ``six.BytesIO`` (or ``io.BytesIO``
@@ -188,9 +182,8 @@ Changelog
 
   - sixer.py now accepts multiple filenames on the command line, but
     operations becomes the first command line parameter
-  - Add cstring operation
-  - stringio: replace also ``from StringIO import StringIO`` with
-    ``from six import StringIO``
+  - stringio replaces also cStringIO and replaces also
+    ``from StringIO import StringIO``
 
 * 2015-05-27: Version 0.3.1
 

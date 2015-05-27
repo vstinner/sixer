@@ -12,8 +12,7 @@ MAX_RANGE = 1024
 
 OPERATIONS = set((
     "all", "iteritems", "itervalues", "iterkeys", "next", "long", "unicode",
-    "raise", "xrange", "basestring", "six_moves", "stringio", "urllib",
-    "cstringio"))
+    "raise", "xrange", "basestring", "six_moves", "stringio", "urllib"))
 
 # Modules of the Python standard library
 STDLIB_MODULES = (
@@ -134,8 +133,8 @@ FROM_IMPORT_CSTRINGIO_REGEX = from_import_regex(r"cStringIO", r"StringIO")
 IMPORT_CSTRINGIO_REGEX = import_regex(r"cStringIO")
 # 'import cStringIO as StringIO'
 IMPORT_CSTRINGIO_AS_REGEX = import_regex(r"cStringIO as StringIO")
-# 'StringIO.', 'cStringIO.'
-CSTRINGIO_REGEX = re.compile(r'\bc?StringIO\.')
+# 'StringIO.', 'cStringIO.', but not 'six.StringIO' or 'six.cStringIO'
+CSTRINGIO_REGEX = re.compile(r'(?<!six\.)\bc?StringIO\.')
 # 'import urllib', 'import urllib2'
 IMPORT_URLLIB_REGEX = import_regex(r"\burllib2?\b")
 
@@ -564,33 +563,25 @@ class Patcher(object):
     def check_six_moves(self, content):
         pass
 
-    def patch_stringio(self, content):
+    def _patch_stringio1(self, content):
+        # Replace 'from StringIO import StringIO'
+        # with 'from six import StringIO'
+        new_content = FROM_IMPORT_STRINGIO_REGEX.sub('', content)
+        if new_content == content:
+            return content
+        return self.add_import(new_content, 'from six import StringIO')
+
+    def _patch_stringio2(self, content):
+        # Replace 'import StringIO' + 'StringIO.StringIO'
+        # with 'import six' + 'six.StringIO'
         new_content = IMPORT_STRINGIO_REGEX.sub('', content)
-        new_content2 = FROM_IMPORT_STRINGIO_REGEX.sub('', new_content)
-        if new_content2 == content:
+        if new_content == content:
             return content
 
-        replace1 = (new_content != content)
-        replace2 = (new_content2 != new_content)
-        new_content = new_content2
-        if replace1 and replace2:
-            raise Exception("unable to patch 'import StringIO' "
-                            "and 'from StringIO import StringIO' at once")
+        new_content = self.add_import_six(new_content)
+        return new_content.replace("StringIO.StringIO", "six.StringIO")
 
-        if replace1:
-            new_content = self.add_import_six(new_content)
-            new_content = new_content.replace("StringIO.StringIO", "six.StringIO")
-        if replace2:
-            new_content = self.add_import(new_content,
-                                          'from six import StringIO')
-        return new_content
-
-    def check_stringio(self, content):
-        for line in content.splitlines():
-            if 'StringIO.StringIO' in line:
-                self.warn_line(line)
-
-    def patch_cstringio1(self, content):
+    def _patch_cstringio1(self, content):
         # Replace 'from cStringIO import StringIO'
         # with 'from six.moves import cStringIO as StringIO'
         new_content = FROM_IMPORT_CSTRINGIO_REGEX.sub('', content)
@@ -601,30 +592,37 @@ class Patcher(object):
                                       "from six.moves import cStringIO as StringIO")
         return new_content
 
-    def patch_cstringio2(self, content):
+    def _patch_cstringio2(self, content):
+        # Replace 'import cStringIO' + 'cStringIO.StringIO'
+        # with 'from six import moves' + 'moves.cStringIO'
         new_content = IMPORT_CSTRINGIO_REGEX.sub('', content)
-        new_content2 = IMPORT_CSTRINGIO_AS_REGEX.sub('', new_content)
-        if new_content2 == content:
+        if new_content == content:
             return content
 
-        replace_cstringio = (new_content != content)
-        replace_stringio = (new_content2 != new_content)
-        new_content = new_content2
+        new_content = self.add_import(new_content, "from six import moves")
+        return new_content.replace("cStringIO.StringIO", "moves.cStringIO")
+
+    def _patch_cstringio3(self, content):
+        # Replace 'import cStringIO as StringIO' + 'StringIO.StringIO'
+        # with 'from six import moves' + 'moves.cStringIO'
+        new_content = IMPORT_CSTRINGIO_AS_REGEX.sub('', content)
+        if new_content == content:
+            return content
 
         new_content = self.add_import(new_content, "from six import moves")
-        if replace_cstringio:
-            new_content = new_content.replace("cStringIO.StringIO", "moves.cStringIO")
-        if replace_stringio:
-            new_content = new_content.replace("StringIO.StringIO", "moves.cStringIO")
-        return new_content
+        return new_content.replace("StringIO.StringIO", "moves.cStringIO")
 
-    def patch_cstringio(self, content):
-        content = self.patch_cstringio1(content)
-        return self.patch_cstringio2(content)
+    def patch_stringio(self, content):
+        content = self._patch_stringio1(content)
+        content = self._patch_stringio2(content)
+        content = self._patch_cstringio1(content)
+        content = self._patch_cstringio2(content)
+        content = self._patch_cstringio3(content)
+        return content
 
-    def check_cstringio(self, content):
+    def check_stringio(self, content):
         for line in content.splitlines():
-            if CSTRINGIO_REGEX.search(line):
+            if 'StringIO.StringIO' in line or CSTRINGIO_REGEX.search(line):
                 self.warn_line(line)
 
     def patch_urllib(self, content):
