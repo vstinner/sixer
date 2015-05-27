@@ -266,6 +266,7 @@ class TestOperations(unittest.TestCase):
             "from six.moves.builtins import len, open")
 
     def test_stringio(self):
+        # import StringIO
         self.check("stringio",
             """
             import StringIO
@@ -277,6 +278,20 @@ class TestOperations(unittest.TestCase):
 
 
             s = six.StringIO()
+            """)
+
+        # from StringIO import StringIO
+        self.check("stringio",
+            """
+            from StringIO import StringIO
+
+            s = StringIO()
+            """,
+            """
+            from six import StringIO
+
+
+            s = StringIO()
             """)
 
     def test_cstringio(self):
