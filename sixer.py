@@ -490,10 +490,12 @@ class Urllib(Operation):
         ),
 
         'parse': (
+            'parse_qs',
             'parse_qsl',
             'quote',
             'unquote',
             'urlencode',
+            'urljoin',
             'urlparse',
             'urlunparse',
         ),
