@@ -33,6 +33,7 @@ THIRD_PARTY_MODULES = (
     "eventlet",
     "mock",
     "oslo",
+    "six",
     "subunit",
     "testtools",
     "webob",
@@ -520,10 +521,6 @@ class Urllib(Operation):
         return 'urllib.%s.%s' % (submodule, name)
 
     def patch(self, content):
-        if ('from six.moves import urllib' in content
-            or 'six.moves.urllib' in content):
-            return content
-
         new_content = self.IMPORT_URLLIB_REGEX.sub('', content)
         new_content = self.URLLIB_ATTR_REGEX.sub(self.replace, new_content)
         new_content = self.URLLIB2_REGEX.sub('urllib', new_content)

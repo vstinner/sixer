@@ -22,10 +22,11 @@ def replace_stdout():
 class TestOperations(unittest.TestCase):
     # TODO: test Patcher.walk
 
-    def check(self, operation, before, after, **kw):
+    def _check(self, operation, before, after, **kw):
         before = textwrap.dedent(before).strip()
         after = textwrap.dedent(after).strip()
         warnings = kw.pop('warnings', None)
+        ignore_warnings = kw.pop('ignore_warnings', False)
 
         patcher = sixer.Patcher((operation,))
         for attr, value in kw.items():
@@ -40,12 +41,17 @@ class TestOperations(unittest.TestCase):
             code = temp.read()
 
         self.assertEqual(code, after)
-        if warnings:
-            self.assertEqual(len(patcher.warnings), len(warnings))
-            for index, msg in enumerate(warnings):
-                self.assertEqual(patcher.warnings[index][1], msg)
-        else:
-            self.assertEqual(patcher.warnings, [])
+        if not ignore_warnings:
+            if warnings:
+                self.assertEqual(len(patcher.warnings), len(warnings))
+                for index, msg in enumerate(warnings):
+                    self.assertEqual(patcher.warnings[index][1], msg)
+            else:
+                self.assertEqual(patcher.warnings, [])
+
+    def check(self, operation, before, after, **kw):
+        self._check(operation, before, after, **kw)
+        self._check(operation, after, after, ignore_warnings=True)
 
     def check_unchanged(self, operation, code, **kw):
         self.check(operation, code, code, **kw)
