@@ -184,6 +184,7 @@ Changelog
     operations becomes the first command line parameter
   - stringio replaces also cStringIO and replaces also
     ``from StringIO import StringIO``
+  - urllib: replace also urlparse.urlparse()
 
 * 2015-05-27: Version 0.3.1
 

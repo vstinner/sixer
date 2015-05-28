@@ -458,11 +458,12 @@ class Urllib(Operation):
     NAME = "urllib"
     DOC = "replace urllib and urllib2 with six.moves.urllib"
 
-    # 'import urllib', 'import urllib2'
-    IMPORT_URLLIB_REGEX = import_regex(r"\burllib2?\b")
+    # 'import urllib', 'import urllib2', 'import urlparse'
+    IMPORT_URLLIB_REGEX = import_regex(r"\b(?:urllib2?|urlparse)\b")
 
     # urllib.attr or urllib2.attr
-    URLLIB_ATTR_REGEX = re.compile(r"\burllib2?\.(%s)" % IDENTIFIER_REGEX)
+    URLLIB_ATTR_REGEX = re.compile(r"\b(?:urllib2?|urlparse)\.(%s)"
+                                   % IDENTIFIER_REGEX)
 
     # 'urllib2' but not 'urllib2.parse_http_list'
     URLLIB2_REGEX = re.compile(r"\burllib2\b(?!\.parse_http_list)")
@@ -491,6 +492,7 @@ class Urllib(Operation):
             'quote',
             'unquote',
             'urlencode',
+            'urlparse',
         ),
     }
 

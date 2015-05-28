@@ -371,6 +371,20 @@ class TestOperations(unittest.TestCase):
             m = urllib
             """)
 
+        # urlparse
+        self.check("urllib",
+            """
+            import urlparse
+
+            urlparse.urlparse(uri)
+            """,
+            """
+            from six.moves import urllib
+
+
+            urllib.parse.urlparse(uri)
+            """)
+
         # don't touch parse_http_list
         self.check_unchanged("urllib",
             """
