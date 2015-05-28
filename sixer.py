@@ -12,17 +12,42 @@ MAX_RANGE = 1024
 
 # Modules of the Python standard library
 STDLIB_MODULES = (
-    "copy", "re", "sys", "unittest", "heapq", "glob", "os", "string",
-    "textwrap", "StringIO")
+    "StringIO",
+    "copy",
+    "glob",
+    "heapq",
+    "logging",
+    "os",
+    "re",
+    "socket",
+    "string",
+    "sys",
+    "textwrap",
+    "unittest",
+    "urlparse",
+)
 
 # Name prefix of third-party modules (ex: "oslo" matches "osloconfig"
 # and "oslo.db")
 THIRD_PARTY_MODULES = (
-    "oslo", "webob", "subunit", "testtools", "eventlet", "mock")
+    "eventlet",
+    "mock",
+    "oslo",
+    "subunit",
+    "testtools",
+    "webob",
+)
 
 # Modules of the application
 APPLICATION_MODULES = (
-    "nova", "ceilometer", "glance", "neutron", "cinder", "swift")
+    "ceilometer",
+    "cinder",
+    "glance",
+    "glance_store",
+    "neutron",
+    "nova",
+    "swift",
+)
 
 # Ugly regular expressions because I'm too lazy to write a real parser,
 # and Match objects are convinient to modify code in-place
