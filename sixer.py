@@ -497,7 +497,9 @@ class Urllib(Operation):
             'urlencode',
             'urljoin',
             'urlparse',
+            'urlsplit',
             'urlunparse',
+            'urlunsplit',
         ),
     }
 
