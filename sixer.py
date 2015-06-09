@@ -115,7 +115,8 @@ def get_line(content, pos):
 
 
 class Operation:
-    NAME = "name"
+    NAME = "<name>"
+    DOC = "<doc>"
 
     def __init__(self, patcher):
         self.patcher = patcher
@@ -837,10 +838,11 @@ def usage():
     print("usage: %s <operation> <file1> <file2> <...>" % sys.argv[0])
     print()
     print("operations:")
-    for operation in sorted(OPERATION_NAMES):
-        print("- %s" % operation)
+    for name in sorted(OPERATION_NAMES):
+        operation = OPERATION_BY_NAME[name]
+        print("- %s: %s" % (name, operation.DOC))
     print()
-    print("If a directory is passed, sixer finds .py files in subdirectories")
+    print("If a directory is passed, sixer finds .py files in subdirectories.")
     print()
     print("<operation> can be a list of operations separated by commas")
     print("Example: six_moves,urllib")
