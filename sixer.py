@@ -4,11 +4,11 @@ import re
 import sys
 import tokenize
 
-# TODO: UserDict
-
 # Maximum range which creates a list on Python 2. For example, xrange(10) can
 # be replaced with range(10) without "from six.moves import range".
 MAX_RANGE = 1024
+
+OP_ALL = 'all'
 
 # Modules of the Python standard library
 STDLIB_MODULES = (
@@ -662,6 +662,7 @@ OPERATIONS = (
     SixMoves,
 )
 OPERATION_NAMES = set(operation.NAME for operation in OPERATIONS)
+OPERATION_NAMES.add(OP_ALL)
 OPERATION_BY_NAME = {operation.NAME: operation for operation in OPERATIONS}
 
 
@@ -670,9 +671,9 @@ class Patcher:
 
     def __init__(self, operations):
         operations = set(operations)
-        if 'all' in operations:
+        if OP_ALL in operations:
             operations |= set(OPERATION_NAMES)
-            operations.discard('all')
+            operations.discard(OP_ALL)
         self.operations = [OPERATION_BY_NAME[name](self)
                            for name in operations]
         self.warnings = []
@@ -841,7 +842,7 @@ def main():
     operations = sys.argv[1].split(',')
     files = sys.argv[2:]
     for operation in operations:
-        if (operation not in OPERATION_NAMES and operation != 'all'):
+        if operation not in OPERATION_NAMES:
             print("invalid operation: %s" % operation)
             print()
             usage()
