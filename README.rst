@@ -178,21 +178,24 @@ Or run tests manually: type ``python3 tests.py``.
 Changelog
 ---------
 
-* Version 0.4
+* Version 0.4 (2015-06-09)
 
   - sixer.py now accepts multiple filenames on the command line, but
     operations becomes the first command line parameter
-  - stringio replaces also cStringIO and replaces also
+  - the ``stringio`` operation now also replaces cStringIO and
     ``from StringIO import StringIO``
-  - urllib: replace also urlparse.urlparse()
+  - urllib: replace also urlparse.symbol
+  - six_moves: support more modules: Cookie, HTMLParser, SimpleHTTPServer,
+    cookielib, xmlrpclib, etc.
+  - Refactor operations as classes to cleanup the code
 
-* 2015-05-27: Version 0.3.1
+* Version 0.3.1 (2015-05-27)
 
   - Fix the "all" operation
   - six_moves knows more modules
   - urllib: add pathname2url, don't touch urllib2.parse_http_list()
 
-* 2015-05-27: Version 0.3
+* Version 0.3 (2015-05-27)
 
   - First command line parameter can now be a filename
   - Add "all", "basestring", "iterkeys", "six_moves", "stringio"
@@ -201,7 +204,9 @@ Changelog
     applications)
   - Ignore unparsable import lines when adding an import
 
-* 2015-05-12: Version 0.2, first public release
+* Version 0.2 (2015-05-12):
+
+  - First public release
 
 
 See also

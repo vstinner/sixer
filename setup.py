@@ -2,8 +2,8 @@
 #
 # Prepare the release:
 #
-#  - fill the changelog in README.rst
 #  - run tests: tox
+#  - fill the changelog in README.rst
 #  - update version in setup.py
 #  - set release date in the changelog in README.rst
 #  - check that "python3 setup.py sdist" contains all files tracked by
