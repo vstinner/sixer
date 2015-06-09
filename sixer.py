@@ -8,8 +8,6 @@ import tokenize
 # be replaced with range(10) without "from six.moves import range".
 MAX_RANGE = 1024
 
-OP_ALL = 'all'
-
 # Modules of the Python standard library
 STDLIB_MODULES = (
     "StringIO",
@@ -647,6 +645,19 @@ class SixMoves(Operation):
         pass
 
 
+class All(Operation):
+    NAME = "all"
+    DOC = "apply all available operations"
+
+    def patch(self, content):
+        # All is a virtual operation, it's implemented in Patcher.__init__
+        return content
+
+    def check(self, content):
+        # All is a virtual operation, it's implemented in Patcher.__init__
+        pass
+
+
 OPERATIONS = (
     Iteritems,
     Itervalues,
@@ -660,9 +671,9 @@ OPERATIONS = (
     Urllib,
     Raise,
     SixMoves,
+    All,
 )
 OPERATION_NAMES = set(operation.NAME for operation in OPERATIONS)
-OPERATION_NAMES.add(OP_ALL)
 OPERATION_BY_NAME = {operation.NAME: operation for operation in OPERATIONS}
 
 
@@ -671,9 +682,9 @@ class Patcher:
 
     def __init__(self, operations):
         operations = set(operations)
-        if OP_ALL in operations:
+        if All.NAME in operations:
             operations |= set(OPERATION_NAMES)
-            operations.discard(OP_ALL)
+            operations.discard(All.NAME)
         self.operations = [OPERATION_BY_NAME[name](self)
                            for name in operations]
         self.warnings = []
