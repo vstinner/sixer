@@ -12,6 +12,7 @@ MAX_RANGE = 1024
 STDLIB_MODULES = (
     "StringIO",
     "copy",
+    "datetime",
     "glob",
     "heapq",
     "logging",
