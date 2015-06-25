@@ -1,11 +1,17 @@
 #!/usr/bin/env python3
 import contextlib
 import io
+import os
+import shutil
 import sixer
+import subprocess
 import sys
 import tempfile
 import textwrap
 import unittest
+
+
+SIXER = os.path.join(os.path.dirname(__file__), "sixer.py")
 
 
 @contextlib.contextmanager
@@ -19,12 +25,20 @@ def replace_stdout():
         sys.stdout = old_stdout
 
 
-class TestOperations(unittest.TestCase):
-    # TODO: test Patcher.walk
+def run_sixer(operation, *paths):
+    args = (sys.executable, SIXER, operation) + paths
+    proc = subprocess.Popen(args,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE)
+    with proc:
+        stdout, stderr = proc.communicate()
+        exitcode = proc.wait()
 
+    return (exitcode, stdout, stderr)
+
+
+class TestOperations(unittest.TestCase):
     def _check(self, operation, before, after, **kw):
-        before = textwrap.dedent(before).strip()
-        after = textwrap.dedent(after).strip()
         warnings = kw.pop('warnings', None)
         ignore_warnings = kw.pop('ignore_warnings', False)
 
@@ -44,14 +58,40 @@ class TestOperations(unittest.TestCase):
         if not ignore_warnings:
             if warnings:
                 self.assertEqual(len(patcher.warnings), len(warnings))
-                for index, msg in enumerate(warnings):
-                    self.assertEqual(patcher.warnings[index][1], msg)
+                for index, expected in enumerate(warnings):
+                    msg = patcher.warnings[index].split(": ", 1)[1]
+                    self.assertEqual(msg, expected)
             else:
                 self.assertEqual(patcher.warnings, [])
 
+    def check_program(self, operation, before, after):
+        with tempfile.NamedTemporaryFile("w+") as tmp:
+            tmp.write(before)
+            tmp.flush()
+
+            exitcode, stdout, stderr = run_sixer(operation, tmp.name)
+            self.assertEqual(exitcode, 0)
+            self.assertEqual(stderr, b'')
+
+            tmp.seek(0)
+            code = tmp.read()
+
+        self.assertEqual(code, after)
+
     def check(self, operation, before, after, **kw):
+        before = textwrap.dedent(before).strip()
+        after = textwrap.dedent(after).strip()
+        check_program = kw.pop('check_program', True)
+
+        # Ensure that the code is patched as expected
         self._check(operation, before, after, **kw)
+
+        # Ensure that after is not modified by fixer
         self._check(operation, after, after, ignore_warnings=True)
+
+        # Test command line
+        if check_program:
+            self.check_program(operation, before, after)
 
     def check_unchanged(self, operation, code, **kw):
         self.check(operation, code, code, **kw)
@@ -98,7 +138,10 @@ class TestOperations(unittest.TestCase):
             from six.moves import range
 
             for i in range(10): pass
-            """, max_range=5)
+            """,
+            max_range=5,
+            # it's not possible to pass max_range=5 on the command line
+            check_program=False)
 
     def test_unicode(self):
         self.check("unicode",
@@ -410,6 +453,33 @@ class TestOperations(unittest.TestCase):
 
             for i in range(10): pass
             """)
+
+
+class TestProgram(unittest.TestCase):
+    def test_walk_dir(self):
+        files = []
+        path = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, path)
+
+        filename = os.path.join(path, "file1.py")
+        with open(filename, "w", encoding="ASCII") as f:
+            f.write("x = 1L\n")
+        files.append((filename, "x = 1\n"))
+
+        filename = os.path.join(path, "file2.py")
+        with open(filename, "w", encoding="ASCII") as f:
+            f.write("unicode\n")
+        files.append((filename, "import six\n\nsix.text_type\n"))
+
+        exitcode, stdout, stderr = run_sixer("all", path)
+        self.assertEqual(exitcode, 0)
+        self.assertEqual(stderr, b'')
+
+        for filename, after in files:
+            with open(filename, encoding="ASCII") as f:
+                code = f.read()
+
+            self.assertEqual(code, after, "file=%r" % filename)
 
 
 if __name__ == "__main__":
