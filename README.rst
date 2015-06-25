@@ -178,6 +178,11 @@ Or run tests manually: type ``python3 tests.py``.
 Changelog
 ---------
 
+* Version 0.4.1
+
+  - Emit a warning if the directory does not contain any .py file or
+    if the path does not exist
+
 * Version 0.4 (2015-06-09)
 
   - sixer.py now accepts multiple filenames on the command line, but

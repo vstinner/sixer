@@ -693,11 +693,7 @@ class Patcher:
         self.current_file = None
         self.max_range = MAX_RANGE
 
-    def _walk(self, path):
-        if os.path.isfile(path):
-            yield path
-            return
-
+    def _walk_dir(self, path):
         for dirpath, dirnames, filenames in os.walk(path):
             # Don't walk into .tox
             try:
@@ -710,8 +706,19 @@ class Patcher:
 
     def walk(self, paths):
         for path in paths:
-            for filename in self._walk(path):
-                yield filename
+            if os.path.isfile(path):
+                yield path
+            else:
+                empty = True
+                for filename in self._walk_dir(path):
+                    yield filename
+                    empty = False
+                if empty:
+                    if os.path.isdir(path):
+                        self.warning("Directory %s doesn't contain any "
+                                     ".py file" % path)
+                    else:
+                        self.warning("Path %s doesn't exist" % path)
 
     def add_import_names(self, content, import_line, import_names):
         create_new_import_group = None
@@ -783,14 +790,15 @@ class Patcher:
         names = parse_import(line)
         return self.add_import_names(content, line, names)
 
-    def _display_warning(self, warn):
-        msg = "WARNING: %s: %s" % warn
-        print(msg)
+    def _display_warning(self, msg):
+        print("WARNING: %s" % msg)
+
+    def warning(self, msg):
+        self._display_warning(msg)
+        self.warnings.append(msg)
 
     def warn_line(self, line):
-        warn = (self.current_file, line.strip())
-        self._display_warning(warn)
-        self.warnings.append(warn)
+        self.warning("%s: %s" % (self.current_file, line.strip()))
 
     def check(self, content):
         for operation in self.operations:
@@ -821,18 +829,21 @@ class Patcher:
         return True
 
     def main(self, paths):
+        nfiles = 0
         for filename in self.walk(paths):
             try:
                 self.patch(filename)
             except Exception:
                 print("ERROR while patching %s" % filename)
                 raise
+            nfiles += 1
 
+        print("Scanned %s files" % nfiles)
         if self.warnings:
             print()
             print("Warnings:")
-        for warning in self.warnings:
-            self._display_warning(warning)
+        for msg in self.warnings:
+            self._display_warning(msg)
 
 
 def usage():

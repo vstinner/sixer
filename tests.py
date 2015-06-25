@@ -456,7 +456,26 @@ class TestOperations(unittest.TestCase):
 
 
 class TestProgram(unittest.TestCase):
-    def test_walk_dir(self):
+    def run_sixer(self, scanned, *paths):
+        exitcode, stdout, stderr = run_sixer("all", *paths)
+        self.assertEqual(exitcode, 0)
+        msg = 'Scanned %s files\n' % scanned
+        self.assertIn(msg.encode('ascii'), stdout)
+        self.assertEqual(stderr, b'')
+        return stdout
+
+    def test_patch_file(self):
+        with tempfile.NamedTemporaryFile("w+", encoding="ASCII") as tmp:
+            tmp.write("x = 1L\n")
+            tmp.flush()
+
+            stdout = self.run_sixer(1, tmp.name)
+
+            tmp.seek(0)
+            code = tmp.read()
+            self.assertEqual(code, "x = 1\n")
+
+    def test_patch_dir(self):
         files = []
         path = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, path)
@@ -471,9 +490,7 @@ class TestProgram(unittest.TestCase):
             f.write("unicode\n")
         files.append((filename, "import six\n\nsix.text_type\n"))
 
-        exitcode, stdout, stderr = run_sixer("all", path)
-        self.assertEqual(exitcode, 0)
-        self.assertEqual(stderr, b'')
+        stdout = self.run_sixer(2, path)
 
         for filename, after in files:
             with open(filename, encoding="ASCII") as f:
@@ -481,6 +498,26 @@ class TestProgram(unittest.TestCase):
 
             self.assertEqual(code, after, "file=%r" % filename)
 
+    def test_empty_dir(self):
+        path = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, path)
+
+        stdout = self.run_sixer(0, path)
+        msg = "WARNING: Directory %s doesn't contain any .py file\n" % path
+        self.assertIn(os.fsencode(msg), stdout)
+        self.assertIn(b'Scanned 0 files\n', stdout)
+
+    def test_nonexistent_path(self):
+        path = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, path)
+
+        filename = os.path.join(path, 'nonexistent')
+        stdout = self.run_sixer(0, filename)
+
+        msg = ("WARNING: Path %s doesn't exist\n"
+               % filename)
+        self.assertIn(os.fsencode(msg), stdout)
+        self.assertIn(b'Scanned 0 files\n', stdout)
 
 if __name__ == "__main__":
     unittest.main()
