@@ -179,12 +179,13 @@ Or run tests manually: type ``python3 tests.py``.
 Changelog
 ---------
 
-* Version 0.4.1
+* Version 0.5 (2015-07-08)
 
   - six_moves: support "import module as name" syntax and add cPickle module
   - Add --to-stdout, --quiet and --max-range command line options
   - Emit a warning if the directory does not contain any .py file or
     if the path does not exist
+  - Test also directly the sixer.py program
 
 * Version 0.4 (2015-06-09)
 
