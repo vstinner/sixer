@@ -44,7 +44,7 @@ class TestOperations(unittest.TestCase):
 
         patcher = sixer.Patcher((operation,))
         for attr, value in kw.items():
-            setattr(patcher, attr, value)
+            setattr(patcher.options, attr, value)
 
         with tempfile.NamedTemporaryFile("w+") as temp:
             temp.write(before)

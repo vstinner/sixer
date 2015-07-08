@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
+import optparse
 import os
 import re
 import sys
 import tokenize
+import types
 
 # Maximum range which creates a list on Python 2. For example, xrange(10) can
 # be replaced with range(10) without "from six.moves import range".
@@ -121,6 +123,7 @@ class Operation:
 
     def __init__(self, patcher):
         self.patcher = patcher
+        self.options = patcher.options
 
     def patch(self, content):
         raise NotImplementedError
@@ -320,7 +323,7 @@ class Xrange(Operation):
         def xrange1_replace(regs):
             nonlocal need_six
             end = int(regs.group(1))
-            if end > self.patcher.max_range:
+            if end > self.options.max_range:
                 need_six = True
             return 'range(%s)' % end
 
@@ -328,7 +331,7 @@ class Xrange(Operation):
             nonlocal need_six
             start = int(regs.group(1))
             end = int(regs.group(2))
-            if (end - start) > self.patcher.max_range:
+            if (end - start) > self.options.max_range:
                 need_six = True
             return 'range(%s, %s)' % (start, end)
 
@@ -682,16 +685,22 @@ OPERATION_BY_NAME = {operation.NAME: operation for operation in OPERATIONS}
 class Patcher:
     IMPORT_SIX_REGEX = re.compile(r"^import six$", re.MULTILINE)
 
-    def __init__(self, operations):
+    def __init__(self, operations, options=None):
+        self.warnings = []
+        self.current_file = None
+        if options is None:
+            options = types.SimpleNamespace()
+            options.max_range = MAX_RANGE
+            options.to_stdout = False
+            options.quiet = False
+        self.options = options
+
         operations = set(operations)
         if All.NAME in operations:
             operations |= set(OPERATION_NAMES)
             operations.discard(All.NAME)
         self.operations = [OPERATION_BY_NAME[name](self)
                            for name in operations]
-        self.warnings = []
-        self.current_file = None
-        self.max_range = MAX_RANGE
 
     def _walk_dir(self, path):
         for dirpath, dirnames, filenames in os.walk(path):
@@ -804,6 +813,10 @@ class Patcher:
         for operation in self.operations:
             operation.check(content)
 
+    def write_stdout(self, content):
+        for line in content.splitlines():
+            print(line)
+
     def patch(self, filename):
         self.current_file = filename
 
@@ -817,16 +830,74 @@ class Patcher:
         if content == old_content:
             # no change
             self.check(content)
+            if self.options.to_stdout:
+                self.write_stdout(content)
             return False
 
         with open(filename, "rb") as fp:
             encoding, _ = tokenize.detect_encoding(fp.readline)
 
         print("Patch %s" % filename)
-        with open(filename, "w", encoding=encoding) as fp:
-            fp.write(content)
+        if not self.options.to_stdout:
+            with open(filename, "w", encoding=encoding) as fp:
+                fp.write(content)
+        else:
+            self.write_stdout(content)
         self.check(content)
         return True
+
+    @staticmethod
+    def usage(parser):
+        parser.print_help()
+        print()
+        print("operations:")
+        for name in sorted(OPERATION_NAMES):
+            operation = OPERATION_BY_NAME[name]
+            print("- %s: %s" % (name, operation.DOC))
+        print()
+        print("If a directory is passed, sixer finds .py files in subdirectories.")
+        print()
+        print("<operation> can be a list of operations separated by commas")
+        print("Example: six_moves,urllib")
+
+    @staticmethod
+    def parse_options():
+        parser = optparse.OptionParser(
+            description=("sixer is a tool adding Python 3 support "
+                         "to a Python 2 project"),
+            usage="%prog [options] <operation> <file1> <file2> <...>")
+        parser.add_option(
+            '-c', '--to-stdout', action="store_true",
+            help='Write output into stdout instead of modify files in-place '
+                 '(imply --quiet option)')
+        parser.add_option(
+            '-q', '--quiet', action="store_true",
+            help='Be quiet')
+        parser.add_option(
+            '--max-range', type="int",
+            help=("Don't use six.moves.xrange for ranges smaller than "
+                  "MAX_RANGE items (default: %s)" % MAX_RANGE),
+            default=MAX_RANGE)
+
+        options, args = parser.parse_args()
+        if len(args) < 2:
+            Patcher.usage(parser)
+            sys.exit(1)
+
+        if options.to_stdout:
+            options.quiet = True
+
+        operations = args[0].split(',')
+        paths = args[1:]
+
+        for operation in operations:
+            if operation not in OPERATION_NAMES:
+                print("invalid operation: %s" % operation)
+                print()
+                Patcher.usage()
+                sys.exit(1)
+
+        return options, operations, paths
 
     def main(self, paths):
         nfiles = 0
@@ -838,7 +909,8 @@ class Patcher:
                 raise
             nfiles += 1
 
-        print("Scanned %s files" % nfiles)
+        if not self.options.quiet:
+            print("Scanned %s files" % nfiles)
         if self.warnings:
             print()
             print("Warnings:")
@@ -846,33 +918,9 @@ class Patcher:
             self._display_warning(msg)
 
 
-def usage():
-    print("usage: %s <operation> <file1> <file2> <...>" % sys.argv[0])
-    print()
-    print("operations:")
-    for name in sorted(OPERATION_NAMES):
-        operation = OPERATION_BY_NAME[name]
-        print("- %s: %s" % (name, operation.DOC))
-    print()
-    print("If a directory is passed, sixer finds .py files in subdirectories.")
-    print()
-    print("<operation> can be a list of operations separated by commas")
-    print("Example: six_moves,urllib")
-    sys.exit(1)
-
-
 def main():
-    if len(sys.argv) < 3:
-        usage()
-    operations = sys.argv[1].split(',')
-    files = sys.argv[2:]
-    for operation in operations:
-        if operation not in OPERATION_NAMES:
-            print("invalid operation: %s" % operation)
-            print()
-            usage()
-
-    Patcher(operations).main(files)
+    options, operations, paths = Patcher.parse_options()
+    Patcher(operations, options).main(paths)
 
 if __name__ == "__main__":
     main()
