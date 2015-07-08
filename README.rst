@@ -113,6 +113,7 @@ Operations
     - SimpleHTTPServer
     - SimpleXMLRPCServer
     - __builtin__
+    - cPickle
     - cookielib
     - htmlentitydefs
     - httplib
@@ -180,6 +181,8 @@ Changelog
 
 * Version 0.4.1
 
+  - six_moves: support "import module as name" syntax and add cPickle module
+  - Add --to-stdout, --quiet and --max-range command line options
   - Emit a warning if the directory does not contain any .py file or
     if the path does not exist
 

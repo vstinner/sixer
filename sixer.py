@@ -600,6 +600,7 @@ class SixMoves(Operation):
         'SimpleHTTPServer': 'SimpleHTTPServer',
         'SimpleXMLRPCServer': 'xmlrpc_server',
         '__builtin__': 'builtins',
+        'cPickle': 'cPickle',
         'cookielib': 'http_cookiejar',
         'htmlentitydefs': 'html_entities',
         'httplib': 'http_client',
@@ -608,11 +609,12 @@ class SixMoves(Operation):
         'xmlrpclib': 'xmlrpc_client',
     }
 
-    SIX_MOVES_REGEX = ("(%s)" % '|'.join(sorted(map(re.escape, SIX_MOVES.keys()))))
-    IMPORT_REGEX = re.compile(r"^import %s\n\n?" % SIX_MOVES_REGEX,
+    SIX_MOVES_REGEX = ("(?:%s)" % '|'.join(sorted(map(re.escape, SIX_MOVES.keys()))))
+    IMPORT_REGEX = re.compile(r"^import (%s)( as %s)?\n\n?"
+                              % (SIX_MOVES_REGEX, IDENTIFIER_REGEX),
                               re.MULTILINE)
     FROM_REGEX = r"(%s(?:, %s)*)" % (IDENTIFIER_REGEX, IDENTIFIER_REGEX)
-    FROM_IMPORT_REGEX = re.compile(r"^from %s import %s"
+    FROM_IMPORT_REGEX = re.compile(r"^from (%s) import %s"
                             % (SIX_MOVES_REGEX, FROM_REGEX),
                             re.MULTILINE)
 
@@ -622,8 +624,11 @@ class SixMoves(Operation):
 
         def replace_import(regs):
             name = regs.group(1)
+            as_name = regs.group(2)
             new_name = self.SIX_MOVES[name]
             line = 'from six.moves import %s' % new_name
+            if as_name:
+                line += as_name
             add_imports.append(line)
             replace.append((name, new_name))
             return ''
@@ -837,7 +842,8 @@ class Patcher:
         with open(filename, "rb") as fp:
             encoding, _ = tokenize.detect_encoding(fp.readline)
 
-        print("Patch %s" % filename)
+        if not self.options.quiet:
+            print("Patch %s" % filename)
         if not self.options.to_stdout:
             with open(filename, "w", encoding=encoding) as fp:
                 fp.write(content)

@@ -309,6 +309,18 @@ class TestOperations(unittest.TestCase):
             builtins.open()
             """)
 
+        self.check("six_moves",
+            """
+            import cPickle as pickle
+
+            pickle
+            """,
+            """
+            from six.moves import cPickle as pickle
+
+            pickle
+            """)
+
     def test_six_moves_from_import(self):
         self.check("six_moves",
             "from __builtin__ import len, open",
