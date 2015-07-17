@@ -14,9 +14,11 @@ MAX_RANGE = 1024
 STDLIB_MODULES = (
     "StringIO",
     "copy",
+    "csv",
     "datetime",
     "glob",
     "heapq",
+    "importlib",
     "logging",
     "os",
     "re",
@@ -24,6 +26,7 @@ STDLIB_MODULES = (
     "string",
     "sys",
     "textwrap",
+    "types",
     "unittest",
     "urlparse",
 )
@@ -31,6 +34,7 @@ STDLIB_MODULES = (
 # Name prefix of third-party modules (ex: "oslo" matches "osloconfig"
 # and "oslo.db")
 THIRD_PARTY_MODULES = (
+    "djanjo",
     "eventlet",
     "mock",
     "oslo",
@@ -46,6 +50,7 @@ APPLICATION_MODULES = (
     "cinder",
     "glance",
     "glance_store",
+    "horizon",
     "neutron",
     "nova",
     "swift",
