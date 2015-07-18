@@ -473,6 +473,11 @@ class Urllib(Operation):
     # 'import urllib', 'import urllib2', 'import urlparse'
     IMPORT_URLLIB_REGEX = import_regex(r"\b(?:urllib2?|urlparse)\b")
 
+    # 'from urlparse import ...'
+    # TODO: convert imports instead of emitting a warning
+    FROM_IMPORT_REGEX = re.compile(r"^from (?:urllib2?|urlparse) import",
+                                   re.MULTILINE)
+
     # urllib.attr or urllib2.attr
     URLLIB_ATTR_REGEX = re.compile(r"\b(?:urllib2?|urlparse)\.(%s)"
                                    % IDENTIFIER_REGEX)
@@ -548,6 +553,8 @@ class Urllib(Operation):
     def check(self, content):
         for line in content.splitlines():
             if 'urllib2.parse_http_list' in line:
+                self.patcher.warn_line(line)
+            elif self.FROM_IMPORT_REGEX.search(line):
                 self.patcher.warn_line(line)
 
 
