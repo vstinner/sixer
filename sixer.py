@@ -542,11 +542,11 @@ class Urllib(Operation):
 
     def patch(self, content):
         new_content = self.IMPORT_URLLIB_REGEX.sub('', content)
-        new_content = self.URLLIB_ATTR_REGEX.sub(self.replace, new_content)
-        new_content = self.URLLIB2_REGEX.sub('urllib', new_content)
         if new_content == content:
             return content
 
+        new_content = self.URLLIB_ATTR_REGEX.sub(self.replace, new_content)
+        new_content = self.URLLIB2_REGEX.sub('urllib', new_content)
         return self.patcher.add_import(new_content,
                                        "from six.moves import urllib")
 
