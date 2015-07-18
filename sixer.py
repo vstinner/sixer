@@ -318,9 +318,12 @@ class Xrange(Operation):
     NAME = "xrange"
     DOC = "replace xrange() with range() using 'from six import range'"
 
+    # 'xrange(' but not 'moves.xrange(' or 'from six.moves import xrange'
+    XRANGE_REGEX = re.compile("(?<!moves\.)xrange *\(")
     # 'xrange(2)'
-    XRANGE1_REGEX = re.compile(r"xrange\(([0-9]+)\)")
-    XRANGE2_REGEX = re.compile(r"xrange\(([0-9]+), ([0-9]+)\)")
+    XRANGE1_REGEX = re.compile(r"(?<!moves\.)xrange\(([0-9]+)\)")
+    # 'xrange(1, 6)'
+    XRANGE2_REGEX = re.compile(r"(?<!moves\.)xrange\(([0-9]+), ([0-9]+)\)")
 
     def patch(self, content):
         need_six = False
@@ -343,7 +346,7 @@ class Xrange(Operation):
         new_content = self.XRANGE1_REGEX.sub(xrange1_replace, content)
         new_content = self.XRANGE2_REGEX.sub(xrange2_replace, new_content)
 
-        new_content2 = new_content.replace("xrange(", "range(")
+        new_content2 = self.XRANGE_REGEX.sub("range(", new_content)
         if new_content2 != new_content:
             need_six = True
         new_content = new_content2
@@ -354,7 +357,7 @@ class Xrange(Operation):
 
     def check(self, content):
         for line in content.splitlines():
-            if 'xrange' in line:
+            if self.XRANGE_REGEX.search(line):
                 self.patcher.warn_line(line)
 
 

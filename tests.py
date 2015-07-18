@@ -143,6 +143,20 @@ class TestOperations(unittest.TestCase):
             # it's not possible to pass max_range=5 on the command line
             check_program=False)
 
+        self.check_unchanged("xrange",
+            "from six.moves import xrange")
+
+        self.check_unchanged("xrange",
+            """
+            from six import moves
+
+            x = list(moves.xrange(n))
+            x = list(moves.xrange(5))
+            x = list(moves.xrange(1, 9))
+            x = list(moves.xrange(0, 10, 2))
+            """)
+
+
     def test_unicode(self):
         self.check("unicode",
             "value = unicode(data)",

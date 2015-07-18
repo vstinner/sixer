@@ -179,6 +179,11 @@ Or run tests manually: type ``python3 tests.py``.
 Changelog
 ---------
 
+* Version 0.5.1
+
+ - Fix xrange() regex to not modify "from six.moves import xrange" and
+   "moves.xrange(n)"
+
 * Version 0.5 (2015-07-08)
 
   - six_moves: support "import module as name" syntax and add cPickle module
