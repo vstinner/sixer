@@ -19,13 +19,15 @@ Usage
 
 ::
 
-    sixer.py <directory or filename> <operation>
+    sixer.py <operation> <directory or filename>
 
 sixer.py displays the name of patched files. It displays warnings for code
 unchanged but which looks suspicious.
 
 If you pass a directory, sixer.py searchs for ``.py`` files in all
 subdirectories.
+
+<operation> can be a list of operations separated by commas
 
 Warning: sixer.py modifies files inplace without asking for confirmation. It's
 better to use it in a project managed by a source control manager (ex: git).
