@@ -34,7 +34,7 @@ def run_sixer(operation, *paths):
         stdout, stderr = proc.communicate()
         exitcode = proc.wait()
 
-    return (exitcode, stdout, stderr)
+    return (exitcode, os.fsdecode(stdout), os.fsdecode(stderr))
 
 
 class TestOperations(unittest.TestCase):
@@ -71,7 +71,7 @@ class TestOperations(unittest.TestCase):
 
             exitcode, stdout, stderr = run_sixer(operation, tmp.name)
             self.assertEqual(exitcode, 0)
-            self.assertEqual(stderr, b'')
+            self.assertEqual(stderr, '')
 
             tmp.seek(0)
             code = tmp.read()
@@ -486,8 +486,8 @@ class TestProgram(unittest.TestCase):
         exitcode, stdout, stderr = run_sixer("all", *paths)
         self.assertEqual(exitcode, 0)
         msg = 'Scanned %s files\n' % scanned
-        self.assertIn(msg.encode('ascii'), stdout)
-        self.assertEqual(stderr, b'')
+        self.assertIn(msg, stdout)
+        self.assertEqual(stderr, '')
         return stdout
 
     def test_patch_file(self):
@@ -530,8 +530,8 @@ class TestProgram(unittest.TestCase):
 
         stdout = self.run_sixer(0, path)
         msg = "WARNING: Directory %s doesn't contain any .py file\n" % path
-        self.assertIn(os.fsencode(msg), stdout)
-        self.assertIn(b'Scanned 0 files\n', stdout)
+        self.assertIn(msg, stdout)
+        self.assertIn('Scanned 0 files\n', stdout)
 
     def test_nonexistent_path(self):
         path = tempfile.mkdtemp()
@@ -542,8 +542,8 @@ class TestProgram(unittest.TestCase):
 
         msg = ("WARNING: Path %s doesn't exist\n"
                % filename)
-        self.assertIn(os.fsencode(msg), stdout)
-        self.assertIn(b'Scanned 0 files\n', stdout)
+        self.assertIn(msg, stdout)
+        self.assertIn('Scanned 0 files\n', stdout)
 
 if __name__ == "__main__":
     unittest.main()
