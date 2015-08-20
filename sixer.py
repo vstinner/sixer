@@ -19,6 +19,7 @@ STDLIB_MODULES = (
     "glob",
     "heapq",
     "importlib",
+    "json",
     "logging",
     "os",
     "re",
@@ -36,8 +37,11 @@ STDLIB_MODULES = (
 THIRD_PARTY_MODULES = (
     "djanjo",
     "eventlet",
+    "keystoneclient",
     "mock",
+    "mox3",
     "oslo",
+    "selenium",
     "six",
     "subunit",
     "testtools",
@@ -53,6 +57,7 @@ APPLICATION_MODULES = (
     "horizon",
     "neutron",
     "nova",
+    "openstack_dashboard",
     "swift",
 )
 
