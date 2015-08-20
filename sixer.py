@@ -514,6 +514,7 @@ class Urllib(Operation):
             'parse_qs',
             'parse_qsl',
             'quote',
+            'quote_plus',
             'unquote',
             'urlencode',
             'urljoin',
