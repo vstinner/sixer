@@ -921,7 +921,7 @@ class Patcher:
             if operation not in OPERATION_NAMES:
                 print("invalid operation: %s" % operation)
                 print()
-                Patcher.usage()
+                Patcher.usage(parser)
                 sys.exit(1)
 
         return options, operations, paths

@@ -545,5 +545,19 @@ class TestProgram(unittest.TestCase):
         self.assertIn(msg, stdout)
         self.assertIn('Scanned 0 files\n', stdout)
 
+    def test_nonexistent_operation(self):
+        with tempfile.NamedTemporaryFile("w+", encoding="ASCII") as tmp:
+            tmp.write("x = 1L\n")
+            tmp.flush()
+
+            exitcode, stdout, stderr = run_sixer("nonexistent", tmp.name)
+
+        self.assertEqual(exitcode, 1)
+        self.assertEqual(stderr, '')
+        expected = ("invalid operation: nonexistent\n"
+                    "\n"
+                    "Usage: sixer.py [options]")
+        self.assertTrue(stdout.startswith(expected), stdout)
+
 if __name__ == "__main__":
     unittest.main()
