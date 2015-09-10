@@ -694,10 +694,10 @@ class Itertools(Operation):
     FUNCTIONS_REGEX = '(?:%s)' % '|'.join(FUNCTIONS)
 
     # 'from itertools import imap'
-    IMAP_IMPORT_REGEX = from_import_regex(r"itertools", FUNCTIONS_REGEX)
+    IFUNC_IMPORT_REGEX = from_import_regex(r"itertools", FUNCTIONS_REGEX)
 
-    # 'imap'
-    IMAP_REGEX = re.compile(r'\b%s\b' % FUNCTIONS_REGEX)
+    # 'imap', 'ifilter'
+    IFUNC_REGEX = re.compile(r'\b(%s)\b' % FUNCTIONS_REGEX)
 
     # 'itertools.imap'
     ITERTOOLS_IFUNC_REGEX = re.compile(r'\bitertools\.(%s)\b' % FUNCTIONS_REGEX)
@@ -708,20 +708,20 @@ class Itertools(Operation):
     # 'import itertools'
     IMPORT_ITERTOOLS_REGEX = import_regex(r"itertools")
 
-    def patch_from_import(self, content):
-        # Replace itertools.imap with six.moves.map
-        new_content = self.IMAP_IMPORT_REGEX.sub('', content)
-        if new_content == content:
-            return content
-
-        content = self.patcher.add_import_six(new_content)
-        content = self.IMAP_REGEX.sub('six.moves.map', content)
-        return content
-
     def replace(self, regs):
         func = regs.group(1)
         six_func = self.FUNCTIONS[func]
         return 'six.moves.%s' % six_func
+
+    def patch_from_import(self, content):
+        # Replace itertools.imap with six.moves.map
+        new_content = self.IFUNC_IMPORT_REGEX.sub('', content)
+        if new_content == content:
+            return content
+
+        content = self.patcher.add_import_six(new_content)
+        content = self.IFUNC_REGEX.sub(self.replace, content)
+        return content
 
     def patch_import(self, content):
         # Replace itertools.imap with six.moves.map
