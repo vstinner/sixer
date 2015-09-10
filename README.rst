@@ -185,6 +185,9 @@ Changelog
 
  - Fix xrange() regex to not modify "from six.moves import xrange" and
    "moves.xrange(n)"
+ - Fix urllib for urllib or urlparse module get from the urllib2 module.
+   For example, ``urllib2.urlparse.urlparse`` (``import urllib2``) is now
+   replaced with ``urllib.parse.urlparse`` (``from six.moves import urllib``).
 
 * Version 0.5 (2015-07-08)
 

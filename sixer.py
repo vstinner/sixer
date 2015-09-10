@@ -473,7 +473,7 @@ class Stringio(Operation):
 
 class Urllib(Operation):
     NAME = "urllib"
-    DOC = "replace urllib and urllib2 with six.moves.urllib"
+    DOC = "replace urllib, urllib2 and urlparse with six.moves.urllib"
 
     # 'import urllib', 'import urllib2', 'import urlparse'
     IMPORT_URLLIB_REGEX = import_regex(r"\b(?:urllib2?|urlparse)\b")
@@ -482,6 +482,10 @@ class Urllib(Operation):
     # TODO: convert imports instead of emitting a warning
     FROM_IMPORT_REGEX = re.compile(r"^from (?:urllib2?|urlparse) import",
                                    re.MULTILINE)
+
+    # urllib2.urlparse.attr or urllib2.urllib.attr
+    URLLIB2_MOD_ATTR_REGEX = re.compile(r"\burllib2\.(?:urllib|urlparse)\.(%s)"
+                                        % IDENTIFIER_REGEX)
 
     # urllib.attr or urllib2.attr
     URLLIB_ATTR_REGEX = re.compile(r"\b(?:urllib2?|urlparse)\.(%s)"
@@ -551,6 +555,7 @@ class Urllib(Operation):
         if new_content == content:
             return content
 
+        new_content = self.URLLIB2_MOD_ATTR_REGEX.sub(self.replace, new_content)
         new_content = self.URLLIB_ATTR_REGEX.sub(self.replace, new_content)
         new_content = self.URLLIB2_REGEX.sub('urllib', new_content)
         return self.patcher.add_import(new_content,

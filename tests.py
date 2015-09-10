@@ -432,6 +432,20 @@ class TestOperations(unittest.TestCase):
                 pass
             """)
 
+        # urllib2.urlparse.urlparse
+        self.check("urllib",
+            """
+            import urllib2
+
+            urllib2.urlparse.urlparse('')
+            """,
+            """
+            from six.moves import urllib
+
+
+            urllib.parse.urlparse('')
+            """)
+
         # import urllib2
         self.check("urllib",
             """
