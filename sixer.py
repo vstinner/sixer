@@ -19,6 +19,7 @@ STDLIB_MODULES = (
     "glob",
     "heapq",
     "importlib",
+    "itertools",
     "json",
     "logging",
     "os",
@@ -385,7 +386,7 @@ class Basestring(Operation):
                 self.patcher.warn_line(line)
 
 
-class Stringio(Operation):
+class StringIO(Operation):
     NAME = "stringio"
     DOC = ("replace StringIO.StringIO with six.StringIO"
            " and cStringIO.StringIO with six.moves.cStringIO")
@@ -681,6 +682,59 @@ class SixMoves(Operation):
         pass
 
 
+class Itertools(Operation):
+    NAME = "itertools"
+    DOC = "replace itertools.imap with six.moves.map"
+
+    # 'from itertools import imap'
+    IMAP_IMPORT_REGEX = from_import_regex(r"itertools", r"imap")
+
+    # 'imap'
+    IMAP_REGEX = re.compile(r'\bimap\b')
+
+    # 'itertools.imap'
+    ITERTOOLS_IMAP_REGEX = re.compile(r'\bitertools\.imap\b')
+
+    # 'itertools.'
+    ITERTOOLS_REGEX = re.compile(r'\bitertools\.')
+
+    # 'import itertools'
+    IMPORT_ITERTOOLS_REGEX = import_regex(r"itertools")
+
+    def patch_from_import(self, content):
+        # Replace itertools.imap with six.moves.map
+        new_content = self.IMAP_IMPORT_REGEX.sub('', content)
+        if new_content == content:
+            return content
+
+        content = self.patcher.add_import_six(new_content)
+        content = self.IMAP_REGEX.sub('six.moves.map', content)
+        return content
+
+    def patch_import(self, content):
+        # Replace itertools.imap with six.moves.map
+        new_content = self.ITERTOOLS_IMAP_REGEX.sub('six.moves.map', content)
+        if new_content == content:
+            return content
+
+        content = new_content
+        if not self.ITERTOOLS_REGEX.search(content):
+            # itertools is no more used, remove it
+            content = self.IMPORT_ITERTOOLS_REGEX.sub('', content)
+
+        return self.patcher.add_import_six(content)
+
+    def patch(self, content):
+        content = self.patch_from_import(content)
+        content = self.patch_import(content)
+        return content
+
+    def check(self, content):
+        for line in content.splitlines():
+            if 'imap' in line:
+                self.patcher.warn_line(line)
+
+
 class All(Operation):
     NAME = "all"
     DOC = "apply all available operations"
@@ -703,10 +757,11 @@ OPERATIONS = (
     Unicode,
     Xrange,
     Basestring,
-    Stringio,
+    StringIO,
     Urllib,
     Raise,
     SixMoves,
+    Itertools,
     All,
 )
 OPERATION_NAMES = set(operation.NAME for operation in OPERATIONS)

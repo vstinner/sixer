@@ -494,6 +494,57 @@ class TestOperations(unittest.TestCase):
             for i in range(10): pass
             """)
 
+    def test_itertools(self):
+        self.check("itertools",
+            """
+            from itertools import imap
+
+            for x in imap(str.upper, "abc"):
+                print(x)
+            """,
+            """
+            import six
+
+
+            for x in six.moves.map(str.upper, "abc"):
+                print(x)
+            """)
+
+        self.check("itertools",
+            """
+            import itertools
+
+            for x in itertools.imap(str.upper, "abc"):
+                print(x)
+            """,
+            """
+            import six
+
+
+            for x in six.moves.map(str.upper, "abc"):
+                print(x)
+            """)
+
+        self.check("itertools",
+            """
+            import itertools
+
+            for x in itertools.imap(str.upper, "abc"):
+                print(x)
+
+            x = itertools.chain
+            """,
+            """
+            import itertools
+
+            import six
+
+            for x in six.moves.map(str.upper, "abc"):
+                print(x)
+
+            x = itertools.chain
+            """)
+
 
 class TestProgram(unittest.TestCase):
     def run_sixer(self, scanned, *paths):

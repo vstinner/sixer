@@ -84,6 +84,10 @@ Operations
   * note: ``for key in dict.iterkeys():`` can usually be simplified to
     ``for key in dict:``
 
+- ``itertools``:
+
+  * replace ``itertools.imap`` with ``six.moves.map``
+
 - ``long``:
 
   * replace ``123L`` with ``123``
@@ -183,6 +187,7 @@ Changelog
 
 * Version 0.5.1
 
+ - Add "itertools" operation
  - Fix xrange() regex to not modify "from six.moves import xrange" and
    "moves.xrange(n)"
  - Fix urllib for urllib or urlparse module get from the urllib2 module.
