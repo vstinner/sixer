@@ -514,14 +514,14 @@ class TestOperations(unittest.TestCase):
             """
             import itertools
 
-            for x in itertools.imap(str.upper, "abc"):
+            for x in itertools.ifilter(str.upper, "abc"):
                 print(x)
             """,
             """
             import six
 
 
-            for x in six.moves.map(str.upper, "abc"):
+            for x in six.moves.filter(str.upper, "abc"):
                 print(x)
             """)
 
