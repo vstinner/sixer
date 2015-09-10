@@ -86,6 +86,7 @@ Operations
 
 - ``itertools``:
 
+  * replace ``itertools.ifilter`` with ``six.moves.filter``
   * replace ``itertools.imap`` with ``six.moves.map``
 
 - ``long``:
