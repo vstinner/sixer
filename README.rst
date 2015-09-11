@@ -19,7 +19,7 @@ Usage
 
 ::
 
-    sixer.py <operation> <directory or filename>
+    sixer.py <operation> <directories or filenames>
 
 sixer.py displays the name of patched files. It displays warnings for code
 unchanged but which looks suspicious.
@@ -38,6 +38,7 @@ Available operations:
 - basestring
 - iteritems
 - iterkeys
+- itertools
 - itervalues
 - long
 - next
