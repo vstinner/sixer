@@ -186,7 +186,7 @@ Or run tests manually: type ``python3 tests.py``.
 Changelog
 ---------
 
-* Version 0.5.1
+* Version 0.6 (2015-09-11)
 
  - Add "itertools" operation
  - Fix xrange() regex to not modify "from six.moves import xrange" and
