@@ -36,6 +36,7 @@ Available operations:
 
 - all
 - basestring
+- dict0
 - iteritems
 - iterkeys
 - itertools
@@ -70,6 +71,11 @@ Operations
 - ``basestring``:
 
   * replace ``basestring`` with ``six.string_types``
+
+- ``dict0``:
+
+  * replace ``dict.keys()[0]`` with ``list(dict.keys())[0]``
+  * same for ``dict.values()[0]`` and ``dict.items()[0]``
 
 - ``iteritems``:
 
@@ -186,6 +192,10 @@ Or run tests manually: type ``python3 tests.py``.
 
 Changelog
 ---------
+
+* Version 0.6.1
+
+ - Add ``dict0`` operation
 
 * Version 0.6 (2015-09-11)
 

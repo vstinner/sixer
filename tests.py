@@ -545,6 +545,21 @@ class TestOperations(unittest.TestCase):
             x = itertools.chain
             """)
 
+    def test_dict0(self):
+        self.check("dict0",
+            """
+            x = {1: 2}
+            first_key = x.keys()[0]
+            first_value = x.values()[0]
+            first_item = x.items()[0]
+            """,
+            """
+            x = {1: 2}
+            first_key = list(x.keys())[0]
+            first_value = list(x.values())[0]
+            first_item = list(x.items())[0]
+            """)
+
 
 class TestProgram(unittest.TestCase):
     def run_sixer(self, scanned, *paths):

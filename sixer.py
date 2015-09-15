@@ -747,6 +747,28 @@ class Itertools(Operation):
                 self.patcher.warn_line(line)
 
 
+class Dict0(Operation):
+    NAME = "dict0"
+    DOC = ("replace dict.keys()[0] with list(dict.keys())[0], "
+           "same for dict.values()[0] and dict.items()[0]")
+
+    EXPR_REGEX = re.compile(r'(%s\.(?:keys|values|items)\(\))\[0\]'
+                            % EXPR_REGEX)
+
+    CHECK_REGEX = re.compile(r'\.(?:keys|values|items)\(\)\[0\]')
+
+    def replace(self, regs):
+        return 'list(%s)[0]' % regs.group(1)
+
+    def patch(self, content):
+        return self.EXPR_REGEX.sub(self.replace, content)
+
+    def check(self, content):
+        for line in content.splitlines():
+            if self.CHECK_REGEX.search(line):
+                self.patcher.warn_line(line)
+
+
 class All(Operation):
     NAME = "all"
     DOC = "apply all available operations"
@@ -774,6 +796,7 @@ OPERATIONS = (
     Raise,
     SixMoves,
     Itertools,
+    Dict0,
     All,
 )
 OPERATION_NAMES = set(operation.NAME for operation in OPERATIONS)
