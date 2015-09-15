@@ -37,6 +37,7 @@ Available operations:
 - all
 - basestring
 - dict0
+- dict_add
 - iteritems
 - iterkeys
 - itertools
@@ -76,6 +77,11 @@ Operations
 
   * replace ``dict.keys()[0]`` with ``list(dict.keys())[0]``
   * same for ``dict.values()[0]`` and ``dict.items()[0]``
+
+- ``dict_add``:
+
+  * replace ``dict.keys() + list2`` with ``list(dict.keys()) + list2``
+  * same for ``dict.values() + list2`` and ``dict.items() + list2``
 
 - ``iteritems``:
 
@@ -195,7 +201,7 @@ Changelog
 
 * Version 0.6.1
 
- - Add ``dict0`` operation
+ - Add ``dict0`` and ``dict_add`` operations
 
 * Version 0.6 (2015-09-11)
 

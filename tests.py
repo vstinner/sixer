@@ -560,6 +560,21 @@ class TestOperations(unittest.TestCase):
             first_item = list(x.items())[0]
             """)
 
+    def test_dict_add(self):
+        self.check("dict_add",
+            """
+            x = {1: 2}
+            keys = x.keys() + [3]
+            values = x.values() + [4]
+            items = x.items() + [5]
+            """,
+            """
+            x = {1: 2}
+            keys = list(x.keys()) + [3]
+            values = list(x.values()) + [4]
+            items = list(x.items()) + [5]
+            """)
+
 
 class TestProgram(unittest.TestCase):
     def run_sixer(self, scanned, *paths):

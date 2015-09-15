@@ -769,6 +769,28 @@ class Dict0(Operation):
                 self.patcher.warn_line(line)
 
 
+class DictAdd(Operation):
+    NAME = "dict_add"
+    DOC = ('replace "dict.keys() + list2" with "list(dict.keys()) + list2", '
+           'same for "dict.values() + list2" and "dict.items() + list2"')
+
+    EXPR_REGEX = re.compile(r'(%s\.(?:keys|values|items)\(\))( *\+)'
+                            % EXPR_REGEX)
+
+    CHECK_REGEX = re.compile(r'\.(?:keys|values|items)\(\) *\+')
+
+    def replace(self, regs):
+        return 'list(%s)%s' % (regs.group(1), regs.group(2))
+
+    def patch(self, content):
+        return self.EXPR_REGEX.sub(self.replace, content)
+
+    def check(self, content):
+        for line in content.splitlines():
+            if self.CHECK_REGEX.search(line):
+                self.patcher.warn_line(line)
+
+
 class All(Operation):
     NAME = "all"
     DOC = "apply all available operations"
@@ -797,6 +819,7 @@ OPERATIONS = (
     SixMoves,
     Itertools,
     Dict0,
+    DictAdd,
     All,
 )
 OPERATION_NAMES = set(operation.NAME for operation in OPERATIONS)
