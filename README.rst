@@ -202,6 +202,9 @@ Changelog
 * Version 0.6.1
 
  - Add ``dict0`` and ``dict_add`` operations
+ - ``six_moves`` now also patches ``mock.patch()``. For example,
+   ``with mock.patch('__builtin__.open'): ...`` is replaced with
+   ``with mock.patch('six.moves.builtin.open'): ...``
 
 * Version 0.6 (2015-09-11)
 

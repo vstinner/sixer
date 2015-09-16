@@ -340,6 +340,17 @@ class TestOperations(unittest.TestCase):
             "from __builtin__ import len, open",
             "from six.moves.builtins import len, open")
 
+    def test_six_moves_mock_patch(self):
+        # mock.patch()
+        self.check("six_moves",
+            "with mock.patch('__builtin__.open'): pass",
+            "with mock.patch('six.moves.builtins.open'): pass")
+
+        # patch()
+        self.check("six_moves",
+            "with patch('__builtin__.open'): pass",
+            "with patch('six.moves.builtins.open'): pass")
+
     def test_stringio(self):
         # import StringIO
         self.check("stringio",

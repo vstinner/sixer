@@ -71,7 +71,7 @@ def import_regex(name):
 def from_import_regex(module, symbol):
     return re.compile(r"^from %s import %s\n" % (module, symbol), re.MULTILINE)
 
-# 'identifier'
+# 'identifier', 'var3', 'NameCamelCase'
 IDENTIFIER_REGEX = r'[a-zA-Z_][a-zA-Z0-9_]*'
 # '[0]'
 GETITEM_REGEX = r'\[[^]]+\]'
@@ -636,7 +636,11 @@ class SixMoves(Operation):
         'xmlrpclib': 'xmlrpc_client',
     }
 
-    SIX_MOVES_REGEX = ("(?:%s)" % '|'.join(sorted(map(re.escape, SIX_MOVES.keys()))))
+    # 'BaseHTTPServer', '__builtin__', 'repr', ...
+    SIX_MOVES_REGEX = sorted(map(re.escape, SIX_MOVES.keys()))
+    SIX_MOVES_REGEX = ("(?:%s)" % '|'.join(SIX_MOVES_REGEX))
+
+    # 'import BaseHTTPServer', 'import repr as reprlib'
     IMPORT_REGEX = re.compile(r"^import (%s)( as %s)?\n\n?"
                               % (SIX_MOVES_REGEX, IDENTIFIER_REGEX),
                               re.MULTILINE)
@@ -644,6 +648,10 @@ class SixMoves(Operation):
     FROM_IMPORT_REGEX = re.compile(r"^from (%s) import %s"
                             % (SIX_MOVES_REGEX, FROM_REGEX),
                             re.MULTILINE)
+
+    # "patch('__builtin__."
+    MOCK_REGEX = re.compile(r"""(patch\(['"])(%s)\."""
+                            % SIX_MOVES_REGEX, re.MULTILINE)
 
     def patch(self, content):
         add_imports = []
@@ -676,7 +684,14 @@ class SixMoves(Operation):
             names = parse_import(line)
             new_content = self.patcher.add_import_names(new_content, line,
                                                         names)
+
+        new_content = self.MOCK_REGEX.sub(self.replace_mock, new_content)
         return new_content
+
+    def replace_mock(self, regs):
+        name = regs.group(2)
+        new_name = self.SIX_MOVES[name]
+        return '%ssix.moves.%s.' % (regs.group(1), new_name)
 
     def check(self, content):
         pass
