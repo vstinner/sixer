@@ -205,6 +205,9 @@ Changelog
  - ``six_moves`` now also patches ``mock.patch()``. For example,
    ``with mock.patch('__builtin__.open'): ...`` is replaced with
    ``with mock.patch('six.moves.builtin.open'): ...``
+  - ``urllib`` now also replaces ``from ... import ...`` imports.
+    For example, ``from urllib import quote`` is replaced with
+    ``from six.moves.urllib.parse import quote``.
 
 * Version 0.6 (2015-09-11)
 

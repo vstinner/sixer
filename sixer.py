@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import collections
 import optparse
 import os
 import re
@@ -91,6 +92,8 @@ IMPORT_GROUP_REGEX = re.compile(r"^(?:import|from) .*?\n\n",
                                 re.MULTILINE | re.DOTALL)
 IMPORT_NAME_REGEX = re.compile(r"^(?:import|from) (%s)" % IDENTIFIER_REGEX,
                                re.MULTILINE)
+# 'abc', 'sym1, sym2'
+FROM_IMPORT_SYMBOLS_REGEX = r"%s(?:, %s)*" % (IDENTIFIER_REGEX, IDENTIFIER_REGEX)
 
 
 
@@ -479,10 +482,14 @@ class Urllib(Operation):
     # 'import urllib', 'import urllib2', 'import urlparse'
     IMPORT_URLLIB_REGEX = import_regex(r"\b(?:urllib2?|urlparse)\b")
 
-    # 'from urlparse import ...'
-    # TODO: convert imports instead of emitting a warning
-    FROM_IMPORT_REGEX = re.compile(r"^from (?:urllib2?|urlparse) import",
+    # 'from urlparse import symbol, symbol2'
+    FROM_IMPORT_REGEX = re.compile(r"^from (urllib2?|urlparse) import (%s)"
+                                   % FROM_IMPORT_SYMBOLS_REGEX,
                                    re.MULTILINE)
+
+    # 'from urlparse import'
+    FROM_IMPORT_WARN_REGEX = re.compile(r"^from (?:urllib2?|urlparse) import",
+                                        re.MULTILINE)
 
     # urllib2.urlparse.attr or urllib2.urllib.attr
     URLLIB2_MOD_ATTR_REGEX = re.compile(r"\burllib2\.(?:urllib|urlparse)\.(%s)"
@@ -534,6 +541,7 @@ class Urllib(Operation):
     for submodule, symbols in SIX_MOVES_URLLIB.items():
         for symbol in symbols:
             URLLIB[symbol] = submodule
+    # 'urllib.error', 'urllib.parse', 'urllib.request'
     URLLIB_UNCHANGED = set('urllib.%s' % submodule
                            for submodule in SIX_MOVES_URLLIB)
 
@@ -551,7 +559,30 @@ class Urllib(Operation):
             raise Exception("unknown urllib symbol: %s" % text)
         return 'urllib.%s.%s' % (submodule, name)
 
-    def patch(self, content):
+    def replace_import_from(self, regs):
+        module = regs.group(1)
+        symbols = regs.group(2)
+        if 'parse_http_list' in symbols:
+            # six has no helper for parse_http_list() yet
+            return regs.group(0)
+
+        imports = collections.defaultdict(list)
+        for symbol in symbols.split(','):
+            name = symbol.strip()
+            try:
+                submodule = self.URLLIB[name]
+            except KeyError:
+                raise Exception("unknown urllib symbol: %s.%s"
+                                % (module, name))
+            imports[submodule].append(name)
+        # sort imports
+        imports = sorted(imports.items())
+        imports = ['from six.moves.urllib.%s import %s'
+                   % (submodule, ', '.join(names))
+                   for submodule, names in imports]
+        return '\n'.join(imports)
+
+    def patch_import(self, content):
         new_content = self.IMPORT_URLLIB_REGEX.sub('', content)
         if new_content == content:
             return content
@@ -562,11 +593,20 @@ class Urllib(Operation):
         return self.patcher.add_import(new_content,
                                        "from six.moves import urllib")
 
+    def patch_from_import(self, content):
+        return self.FROM_IMPORT_REGEX.sub(self.replace_import_from,
+                                          content)
+
+    def patch(self, content):
+        new_content = self.patch_import(content)
+        new_content = self.patch_from_import(new_content)
+        return new_content
+
     def check(self, content):
         for line in content.splitlines():
             if 'urllib2.parse_http_list' in line:
                 self.patcher.warn_line(line)
-            elif self.FROM_IMPORT_REGEX.search(line):
+            elif self.FROM_IMPORT_WARN_REGEX.search(line):
                 self.patcher.warn_line(line)
 
 
@@ -644,10 +684,11 @@ class SixMoves(Operation):
     IMPORT_REGEX = re.compile(r"^import (%s)( as %s)?\n\n?"
                               % (SIX_MOVES_REGEX, IDENTIFIER_REGEX),
                               re.MULTILINE)
-    FROM_REGEX = r"(%s(?:, %s)*)" % (IDENTIFIER_REGEX, IDENTIFIER_REGEX)
-    FROM_IMPORT_REGEX = re.compile(r"^from (%s) import %s"
-                            % (SIX_MOVES_REGEX, FROM_REGEX),
-                            re.MULTILINE)
+    # 'from BaseHTTPServer import ...'
+    FROM_IMPORT_REGEX = re.compile(r"^from (%s) import (%s)"
+                                   % (SIX_MOVES_REGEX,
+                                      FROM_IMPORT_SYMBOLS_REGEX),
+                                   re.MULTILINE)
 
     # "patch('__builtin__."
     MOCK_REGEX = re.compile(r"""(patch\(['"])(%s)\."""
@@ -670,7 +711,8 @@ class SixMoves(Operation):
 
         def replace_from(regs):
             new_name = self.SIX_MOVES[regs.group(1)]
-            line = 'from six.moves.%s import %s' % (new_name, regs.group(2))
+            symbols = regs.group(2)
+            line = 'from six.moves.%s import %s' % (new_name, symbols)
             add_imports.append(line)
             return ''
 

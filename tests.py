@@ -422,7 +422,7 @@ class TestOperations(unittest.TestCase):
             s = StringIO()
             """)
 
-    def test_urllib(self):
+    def test_urllib_import(self):
         # urllib2.urlopen, urllib2.URLError
         self.check("urllib",
             """
@@ -491,6 +491,19 @@ class TestOperations(unittest.TestCase):
             urllib2.parse_http_list()
             """,
             warnings=['urllib2.parse_http_list()'])
+
+    def test_urllib_from_import(self):
+        self.check("urllib",
+            """
+            from urllib import quote, urlopen
+            from urllib2 import urlopen, URLError
+            """,
+            """
+            from six.moves.urllib.parse import quote
+            from six.moves.urllib.request import urlopen
+            from six.moves.urllib.error import URLError
+            from six.moves.urllib.request import urlopen
+            """)
 
     def test_all(self):
         self.check("all",
