@@ -146,6 +146,11 @@ class Operation:
     def check(self, content):
         raise NotImplementedError
 
+    def warn_line(self, line):
+        message = ("[%s] %s: %s"
+                   % (self.NAME, self.patcher.current_file, line.strip()))
+        self.patcher.warning(message)
+
 
 class Iteritems(Operation):
     NAME = "iteritems"
@@ -167,7 +172,7 @@ class Iteritems(Operation):
         for match in self.CHECK_REGEX.finditer(content):
             line = match.group(0)
             if "six.iteritems" not in line:
-                self.patcher.warn_line(line)
+                self.warn_line(line)
 
 
 class Itervalues(Operation):
@@ -190,7 +195,7 @@ class Itervalues(Operation):
         for match in self.CHECK_REGEX.finditer(content):
             line = match.group(0)
             if "six.itervalues" not in line:
-                self.patcher.warn_line(line)
+                self.warn_line(line)
 
 
 class Iterkeys(Operation):
@@ -213,7 +218,7 @@ class Iterkeys(Operation):
         for match in self.CHECK_REGEX.finditer(content):
             line = match.group(0)
             if "six.iterkeys" not in line:
-                self.patcher.warn_line(line)
+                self.warn_line(line)
 
 
 class Next(Operation):
@@ -237,9 +242,9 @@ class Next(Operation):
 
     def check(self, content):
         for match in self.CHECK_REGEX.finditer(content):
-            self.patcher.warn_line(match.group(0))
+            self.warn_line(match.group(0))
         for match in self.DEF_NEXT_LINE_REGEX.finditer(content):
-            self.patcher.warn_line(match.group(0))
+            self.warn_line(match.group(0))
 
 
 class Long(Operation):
@@ -260,7 +265,7 @@ class Long(Operation):
 
     def check(self, content):
         for match in self.CHECK_REGEX.finditer(content):
-            self.patcher.warn_line(match.group(0))
+            self.warn_line(match.group(0))
 
 
 class Unicode(Operation):
@@ -321,7 +326,7 @@ class Unicode(Operation):
             else:
                 match = self.UNICODE_REGEX.search(line, 0)
             if match:
-                self.patcher.warn_line(line)
+                self.warn_line(line)
 
 
 class Xrange(Operation):
@@ -368,7 +373,7 @@ class Xrange(Operation):
     def check(self, content):
         for line in content.splitlines():
             if self.XRANGE_REGEX.search(line):
-                self.patcher.warn_line(line)
+                self.warn_line(line)
 
 
 class Basestring(Operation):
@@ -387,7 +392,7 @@ class Basestring(Operation):
     def check(self, content):
         for line in content.splitlines():
             if 'basestring' in line:
-                self.patcher.warn_line(line)
+                self.warn_line(line)
 
 
 class StringIO(Operation):
@@ -473,7 +478,7 @@ class StringIO(Operation):
     def check(self, content):
         for line in content.splitlines():
             if 'StringIO.StringIO' in line or self.CSTRINGIO_REGEX.search(line):
-                self.patcher.warn_line(line)
+                self.warn_line(line)
 
 
 class Urllib(Operation):
@@ -606,9 +611,9 @@ class Urllib(Operation):
     def check(self, content):
         for line in content.splitlines():
             if 'urllib2.parse_http_list' in line:
-                self.patcher.warn_line(line)
+                self.warn_line(line)
             elif self.FROM_IMPORT_WARN_REGEX.search(line):
-                self.patcher.warn_line(line)
+                self.warn_line(line)
 
 
 class Raise(Operation):
@@ -651,7 +656,7 @@ class Raise(Operation):
 
     def check(self, content):
         for match in self.RAISE_LINE_REGEX.finditer(content):
-            self.patcher.warn_line(match.group(0))
+            self.warn_line(match.group(0))
 
 
 class Except(Operation):
@@ -682,7 +687,7 @@ class Except(Operation):
         for line in content.splitlines():
             if (self.EXCEPT_WARN_REGEX.search(line)
                 or self.EXCEPT_WARN2_REGEX.search(line)):
-                self.patcher.warn_line(line)
+                self.warn_line(line)
 
 
 class SixMoves(Operation):
@@ -833,7 +838,7 @@ class Itertools(Operation):
     def check(self, content):
         for line in content.splitlines():
             if 'imap' in line:
-                self.patcher.warn_line(line)
+                self.warn_line(line)
 
 
 class Dict0(Operation):
@@ -855,7 +860,7 @@ class Dict0(Operation):
     def check(self, content):
         for line in content.splitlines():
             if self.CHECK_REGEX.search(line):
-                self.patcher.warn_line(line)
+                self.warn_line(line)
 
 
 class DictAdd(Operation):
@@ -877,7 +882,7 @@ class DictAdd(Operation):
     def check(self, content):
         for line in content.splitlines():
             if self.CHECK_REGEX.search(line):
-                self.patcher.warn_line(line)
+                self.warn_line(line)
 
 
 class All(Operation):
@@ -1040,9 +1045,6 @@ class Patcher:
         self._display_warning(msg)
         self.warnings.append(msg)
 
-    def warn_line(self, line):
-        self.warning("%s: %s" % (self.current_file, line.strip()))
-
     def check(self, content):
         for operation in self.operations:
             operation.check(content)
@@ -1057,11 +1059,15 @@ class Patcher:
         with tokenize.open(filename) as fp:
             content = fp.read()
 
-        old_content = content
+        modified = set()
         for operation in self.operations:
-            content = operation.patch(content)
+            new_content = operation.patch(content)
+            if new_content == content:
+                continue
+            modified.add(operation.NAME)
+            content = new_content
 
-        if content == old_content:
+        if not modified:
             # no change
             self.check(content)
             if self.options.to_stdout:
@@ -1072,7 +1078,7 @@ class Patcher:
             encoding, _ = tokenize.detect_encoding(fp.readline)
 
         if not self.options.quiet:
-            print("Patch %s" % filename)
+            print("Patch %s with %s" % (filename, ', '.join(sorted(modified))))
         if not self.options.to_stdout:
             with open(filename, "w", encoding=encoding) as fp:
                 fp.write(content)
