@@ -55,6 +55,7 @@ THIRD_PARTY_MODULES = (
 APPLICATION_MODULES = (
     "ceilometer",
     "cinder",
+    "congress",
     "glance",
     "glance_store",
     "horizon",
