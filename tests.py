@@ -599,6 +599,40 @@ class TestOperations(unittest.TestCase):
             items = list(x.items()) + [5]
             """)
 
+    def test_except(self):
+        # except ValueError
+        self.check("except",
+            """
+            try: func()
+            except ValueError, exc: pass
+            """,
+            """
+            try: func()
+            except ValueError as exc: pass
+            """)
+
+        # except (ValueError, TypeError)
+        self.check("except",
+            """
+            try: func()
+            except (ValueError, TypeError), exc: pass
+            """,
+            """
+            try: func()
+            except (ValueError, TypeError) as exc: pass
+            """)
+
+        # except (ValueError, TypeError, KeyError)
+        self.check("except",
+            """
+            try: func()
+            except (ValueError, TypeError, KeyError), exc: pass
+            """,
+            """
+            try: func()
+            except (ValueError, TypeError, KeyError) as exc: pass
+            """)
+
 
 class TestProgram(unittest.TestCase):
     def run_sixer(self, scanned, *paths):

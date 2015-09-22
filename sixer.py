@@ -29,6 +29,7 @@ STDLIB_MODULES = (
     "string",
     "sys",
     "textwrap",
+    "traceback",
     "types",
     "unittest",
     "urlparse",
@@ -653,6 +654,37 @@ class Raise(Operation):
             self.patcher.warn_line(match.group(0))
 
 
+class Except(Operation):
+    NAME = "except"
+    DOC = ("replace 'except ValueError, exc:' with "
+           "'except ValueError as exc:', replace "
+           "'except (TypeError, ValueError), exc:' with "
+           "'except (TypeError, ValueError) as exc:'.")
+
+    # 'except ValueError, exc:'
+    EXCEPT_REGEX = re.compile(r"except (%s), (%s):"
+                              % (IDENTIFIER_REGEX, IDENTIFIER_REGEX))
+    # 'except (ValueError, TypeError), exc:'
+    EXCEPT2_REGEX = re.compile(r"except (\(%s(?:, *%s)*\)), (%s):"
+                               % (IDENTIFIER_REGEX, IDENTIFIER_REGEX,
+                                  IDENTIFIER_REGEX))
+    EXCEPT_WARN_REGEX = re.compile(r"except [^,()]+, [^:]+:")
+    EXCEPT_WARN2_REGEX = re.compile(r"except \([^()]+\), [^:]+:")
+
+    def except_replace(self, regs):
+        return 'except %s as %s:' % (regs.group(1), regs.group(2))
+
+    def patch(self, content):
+        content = self.EXCEPT_REGEX.sub(self.except_replace, content)
+        return self.EXCEPT2_REGEX.sub(self.except_replace, content)
+
+    def check(self, content):
+        for line in content.splitlines():
+            if (self.EXCEPT_WARN_REGEX.search(line)
+                or self.EXCEPT_WARN2_REGEX.search(line)):
+                self.patcher.warn_line(line)
+
+
 class SixMoves(Operation):
     NAME = "six_moves"
     DOC = ("replace Python 2 imports with six.moves imports")
@@ -873,6 +905,7 @@ OPERATIONS = (
     StringIO,
     Urllib,
     Raise,
+    Except,
     SixMoves,
     Itertools,
     Dict0,

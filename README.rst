@@ -38,6 +38,7 @@ Available operations:
 - basestring
 - dict0
 - dict_add
+- except
 - iteritems
 - iterkeys
 - itertools
@@ -82,6 +83,12 @@ Operations
 
   * replace ``dict.keys() + list2`` with ``list(dict.keys()) + list2``
   * same for ``dict.values() + list2`` and ``dict.items() + list2``
+
+- ``except``:
+
+  * Replace ``except ValueError, exc:`` with ``except ValueError as exc:``
+  * Replace ``except (TypeError, ValueError), exc:`` with
+    ``except (TypeError, ValueError) as exc:``
 
 - ``iteritems``:
 
