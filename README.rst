@@ -208,6 +208,8 @@ Changelog
 
 * Version 0.6.1
 
+ - Add --app command line option to specify the Python module of the
+   application, to help sorting imports
  - Display the name of the operation which modified files
  - Display also the name of the operation in warnings
  - Add ``dict0`` and ``dict_add`` operations

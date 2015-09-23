@@ -12,7 +12,7 @@ import types
 MAX_RANGE = 1024
 
 # Modules of the Python standard library
-STDLIB_MODULES = (
+STDLIB_MODULES = set((
     "StringIO",
     "copy",
     "csv",
@@ -33,7 +33,7 @@ STDLIB_MODULES = (
     "types",
     "unittest",
     "urlparse",
-)
+))
 
 # Name prefix of third-party modules (ex: "oslo" matches "osloconfig"
 # and "oslo.db")
@@ -52,7 +52,7 @@ THIRD_PARTY_MODULES = (
 )
 
 # Modules of the application
-APPLICATION_MODULES = (
+APPLICATION_MODULES = set((
     "ceilometer",
     "cinder",
     "congress",
@@ -63,7 +63,7 @@ APPLICATION_MODULES = (
     "nova",
     "openstack_dashboard",
     "swift",
-)
+))
 
 # Ugly regular expressions because I'm too lazy to write a real parser,
 # and Match objects are convinient to modify code in-place
@@ -1113,6 +1113,10 @@ class Patcher:
             help='Write output into stdout instead of modify files in-place '
                  '(imply --quiet option)')
         parser.add_option(
+            '--app', type="str",
+            help='Name of the application module, used to sort and group '
+                 'imports')
+        parser.add_option(
             '-q', '--quiet', action="store_true",
             help='Be quiet')
         parser.add_option(
@@ -1138,6 +1142,9 @@ class Patcher:
                 print()
                 Patcher.usage(parser)
                 sys.exit(1)
+
+        if options.app:
+            APPLICATION_MODULES.add(options.app)
 
         return options, operations, paths
 
