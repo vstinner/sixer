@@ -70,10 +70,12 @@ APPLICATION_MODULES = set((
 # and Match objects are convinient to modify code in-place
 
 def import_regex(name):
-    return re.compile(r"^import %s\n" % name, re.MULTILINE)
+    return re.compile(r"^import %s\n\n?" % name,
+                      re.MULTILINE)
 
 def from_import_regex(module, symbol):
-    return re.compile(r"^from %s import %s\n" % (module, symbol), re.MULTILINE)
+    return re.compile(r"^from %s import %s\n\n?" % (module, symbol),
+                      re.MULTILINE)
 
 # 'identifier', 'var3', 'NameCamelCase'
 IDENTIFIER_REGEX = r'[a-zA-Z_][a-zA-Z0-9_]*'
@@ -91,8 +93,8 @@ EXPR_REGEX = r'%s(?:\.%s)*' % (SUBEXPR_REGEX, SUBEXPR_REGEX)
 SUBPARENT_REGEX= r'\([^()]+\)'
 # '(...)' or '(...(...)...)' (max: 1 level of nested parenthesis)
 PARENT_REGEX = r'\([^()]*(?:%s)?[^()]*\)' % SUBPARENT_REGEX
-IMPORT_GROUP_REGEX = re.compile(r"^(?:import|from) .*?\n\n?",
-                                re.MULTILINE | re.DOTALL)
+IMPORT_GROUP_REGEX = re.compile(r"^(?:import|from) .*\n(?:(?:import|from) .*\n)*\n*",
+                                re.MULTILINE)
 IMPORT_NAME_REGEX = re.compile(r"^(?:import|from) (%s)" % IDENTIFIER_REGEX,
                                re.MULTILINE)
 # 'abc', 'sym1, sym2'
@@ -491,7 +493,7 @@ class Urllib(Operation):
     IMPORT_URLLIB_REGEX = import_regex(r"\b(?:urllib2?|urlparse)\b")
 
     # 'from urlparse import symbol, symbol2'
-    FROM_IMPORT_REGEX = re.compile(r"^from (urllib2?|urlparse) import (%s)"
+    FROM_IMPORT_REGEX = re.compile(r"^from (urllib2?|urlparse) import (%s)\n\n?"
                                    % FROM_IMPORT_SYMBOLS_REGEX,
                                    re.MULTILINE)
 
@@ -567,7 +569,7 @@ class Urllib(Operation):
             raise Exception("unknown urllib symbol: %s" % text)
         return 'urllib.%s.%s' % (submodule, name)
 
-    def replace_import_from(self, regs):
+    def replace_import_from(self, add_imports, regs):
         module = regs.group(1)
         symbols = regs.group(2)
         if 'parse_http_list' in symbols:
@@ -583,32 +585,37 @@ class Urllib(Operation):
                 raise Exception("unknown urllib symbol: %s.%s"
                                 % (module, name))
             imports[submodule].append(name)
-        # sort imports
-        imports = sorted(imports.items())
-        imports = ['from six.moves.urllib.%s import %s'
-                   % (submodule, ', '.join(names))
-                   for submodule, names in imports]
-        return '\n'.join(imports)
+
+        for submodule, names in imports.items():
+            line = ('from six.moves.urllib.%s import %s'
+                    % (submodule, ', '.join(names)))
+            add_imports.add(line)
+        return ''
 
     def patch_import(self, content):
         new_content = self.IMPORT_URLLIB_REGEX.sub('', content)
         if new_content == content:
             return content
+        content = new_content
 
-        new_content = self.URLLIB2_MOD_ATTR_REGEX.sub(self.replace, new_content)
-        new_content = self.URLLIB_ATTR_REGEX.sub(self.replace, new_content)
-        new_content = self.URLLIB2_REGEX.sub('urllib', new_content)
-        return self.patcher.add_import(new_content,
+        content = self.URLLIB2_MOD_ATTR_REGEX.sub(self.replace, content)
+        content = self.URLLIB_ATTR_REGEX.sub(self.replace, content)
+        content = self.URLLIB2_REGEX.sub('urllib', content)
+        return self.patcher.add_import(content,
                                        "from six.moves import urllib")
 
-    def patch_from_import(self, content):
-        return self.FROM_IMPORT_REGEX.sub(self.replace_import_from,
-                                          content)
+    def patch_from_import(self, content, add_imports):
+        replace_cb = functools.partial(self.replace_import_from, add_imports)
+        content = self.FROM_IMPORT_REGEX.sub(replace_cb, content)
+        return content
 
     def patch(self, content):
-        new_content = self.patch_import(content)
-        new_content = self.patch_from_import(new_content)
-        return new_content
+        add_imports = set()
+        content = self.patch_import(content)
+        content = self.patch_from_import(content, add_imports)
+        for line in sorted(add_imports):
+            content = self.patcher.add_import(content, line)
+        return content
 
     def check(self, content):
         for line in content.splitlines():
@@ -724,7 +731,7 @@ class SixMoves(Operation):
                               % (SIX_MOVES_REGEX, IDENTIFIER_REGEX),
                               re.MULTILINE)
     # 'from BaseHTTPServer import ...'
-    FROM_IMPORT_REGEX = re.compile(r"^from (%s) import (%s)"
+    FROM_IMPORT_REGEX = re.compile(r"^from (%s) import (%s)\n\n?"
                                    % (SIX_MOVES_REGEX,
                                       FROM_IMPORT_SYMBOLS_REGEX),
                                    re.MULTILINE)
@@ -1014,6 +1021,8 @@ class Patcher:
                         self.warning("Path %s doesn't exist" % path)
 
     def add_import_names(self, content, import_line, import_names):
+        import_line = import_line.rstrip() + '\n'
+
         create_new_import_group = None
 
         import_groups = parse_import_groups(content)
@@ -1039,20 +1048,29 @@ class Patcher:
                     break
                 if any(name in APPLICATION_MODULES for name in imports):
                     # application import, add import six before in a new group
-                    create_new_import_group = start
+                    create_new_import_group = (start, False)
                     break
                 if any(name in STDLIB_MODULES for name in imports):
                     seen_stdlib_group = True
             else:
                 if seen_stdlib_group:
-                    create_new_import_group = end
+                    create_new_import_group = (end, True)
                 else:
                     raise Exception("Unable to locate the import group of "
                                     "third-party modules in %s" % import_groups)
 
         if create_new_import_group is not None:
-            pos = create_new_import_group
-            return content[:pos] + import_line + '\n\n' + content[pos:]
+            pos, last_group = create_new_import_group
+            part1 = content[:pos]
+            if not part1 or part1.endswith('\n\n'):
+                newline1 = ''
+            else:
+                newline1 = '\n'
+            if last_group:
+                newline2 = '\n\n'
+            else:
+                newline2 = '\n'
+            return part1 + newline1 + import_line + newline2 + content[pos:]
 
         start, end, imports = import_group
 
@@ -1070,7 +1088,7 @@ class Patcher:
                     break
             pos += len(line)
 
-        return content[:pos] + import_line + '\n' + content[pos:]
+        return content[:pos] + import_line + content[pos:]
 
     def add_import_six(self, content):
         if self.IMPORT_SIX_REGEX.search(content):

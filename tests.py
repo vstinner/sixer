@@ -37,6 +37,16 @@ def run_sixer(operation, *paths):
     return (exitcode, os.fsdecode(stdout), os.fsdecode(stderr))
 
 
+class TestUtils(unittest.TestCase):
+    def test_parse_import_groups(self):
+        self.assertEqual(sixer.parse_import_groups('import sys\n\nimport six\n'),
+                         [(0, 12, {'sys'}), (12, 23, {'six'})])
+        self.assertEqual(sixer.parse_import_groups('import sys\n\nimport six\n\nimport nova\n'),
+                         [(0, 12, {'sys'}), (12, 24, {'six'}), (24, 36, {'nova'})])
+        self.assertEqual(sixer.parse_import_groups('import a\nimport b\nimport c\n'),
+                         [(0, 27, {'a', 'b', 'c'})])
+
+
 class TestOperations(unittest.TestCase):
     def _check(self, operation, before, after, **kw):
         warnings = kw.pop('warnings', None)
@@ -107,6 +117,7 @@ class TestOperations(unittest.TestCase):
             """
             import six
 
+
             six.reraise(a, b, c)
             """)
 
@@ -115,6 +126,7 @@ class TestOperations(unittest.TestCase):
             "raise exc[0], exc[1], exc[2]",
             """
             import six
+
 
             six.reraise(*exc)
             """)
@@ -129,6 +141,7 @@ class TestOperations(unittest.TestCase):
             """
             from six.moves import range
 
+
             for i in range(n): pass
             """)
 
@@ -136,6 +149,7 @@ class TestOperations(unittest.TestCase):
             "for i in xrange(10): pass",
             """
             from six.moves import range
+
 
             for i in range(10): pass
             """,
@@ -150,6 +164,7 @@ class TestOperations(unittest.TestCase):
             """
             from six import moves
 
+
             x = list(moves.xrange(n))
             x = list(moves.xrange(5))
             x = list(moves.xrange(1, 9))
@@ -162,6 +177,7 @@ class TestOperations(unittest.TestCase):
             "value = unicode(data)",
             """
             import six
+
 
             value = six.text_type(data)
             """)
@@ -178,6 +194,7 @@ class TestOperations(unittest.TestCase):
             import copy
 
             import six
+
 
             t = six.text_type
             """)
@@ -246,6 +263,7 @@ class TestOperations(unittest.TestCase):
             """
             import six
 
+
             for key, value in six.iteritems(data): pass
             """)
 
@@ -257,6 +275,7 @@ class TestOperations(unittest.TestCase):
             """
             import six
 
+
             items = six.iteritems(obj.data[0].attr)
             """)
 
@@ -266,6 +285,7 @@ class TestOperations(unittest.TestCase):
             """
             import six
 
+
             for value in six.itervalues(data): pass
             """)
 
@@ -274,6 +294,7 @@ class TestOperations(unittest.TestCase):
             "for value in data.iterkeys(): pass",
             """
             import six
+
 
             for value in six.iterkeys(data): pass
             """)
@@ -307,6 +328,7 @@ class TestOperations(unittest.TestCase):
             """
             import six
 
+
             isinstance(foo, six.string_types)
             """)
 
@@ -320,6 +342,7 @@ class TestOperations(unittest.TestCase):
             """
             from six.moves import builtins
 
+
             builtins.open()
             """)
 
@@ -332,13 +355,23 @@ class TestOperations(unittest.TestCase):
             """
             from six.moves import cPickle as pickle
 
+
             pickle
             """)
 
     def test_six_moves_from_import(self):
         self.check("six_moves",
-            "from __builtin__ import len, open",
-            "from six.moves.builtins import len, open")
+            """
+            from __builtin__ import len, open
+
+            len([])
+            """,
+            """
+            from six.moves.builtins import len, open
+
+
+            len([])
+            """)
 
     def test_six_moves_builtin(self):
         # patch reload
@@ -349,7 +382,9 @@ class TestOperations(unittest.TestCase):
             """,
             """
             import sys
+
             from six.moves import reload_module
+
 
             reload_module(sys)
             """)
@@ -362,6 +397,7 @@ class TestOperations(unittest.TestCase):
             """
             from six.moves import reduce
 
+
             reduce(lambda x, y: x*10+y, [1, 2, 3])
             """)
 
@@ -372,6 +408,7 @@ class TestOperations(unittest.TestCase):
 
             from six.moves import reduce
 
+
             print(reduce(lambda x, y: x*10+y, [1, 2, 3]))
             reload(sys)
             """,
@@ -381,6 +418,7 @@ class TestOperations(unittest.TestCase):
             from six.moves import reduce
             from six.moves import reload_module
 
+
             print(reduce(lambda x, y: x*10+y, [1, 2, 3]))
             reload_module(sys)
             """)
@@ -389,6 +427,7 @@ class TestOperations(unittest.TestCase):
         self.check_unchanged("six_moves",
             """
             from six import moves
+
 
             print(moves.reduce(lambda x, y: x*10+y, [1, 2, 3]))
             """)
@@ -550,12 +589,32 @@ class TestOperations(unittest.TestCase):
             """
             from urllib import quote, urlopen
             from urllib2 import urlopen, URLError
+
+            quote("abc")
             """,
             """
+            from six.moves.urllib.error import URLError
             from six.moves.urllib.parse import quote
             from six.moves.urllib.request import urlopen
-            from six.moves.urllib.error import URLError
-            from six.moves.urllib.request import urlopen
+
+
+            quote("abc")
+            """)
+
+        self.check("urllib",
+            """
+            import sys
+            from urllib import quote
+
+            quote("abc")
+            """,
+            """
+            import sys
+
+            from six.moves.urllib.parse import quote
+
+
+            quote("abc")
             """)
 
     def test_all(self):
@@ -615,6 +674,7 @@ class TestOperations(unittest.TestCase):
             import itertools
 
             import six
+
 
             for x in six.moves.map(str.upper, "abc"):
                 print(x)
@@ -720,7 +780,7 @@ class TestProgram(unittest.TestCase):
         filename = os.path.join(path, "file2.py")
         with open(filename, "w", encoding="ASCII") as f:
             f.write("unicode\n")
-        files.append((filename, "import six\n\nsix.text_type\n"))
+        files.append((filename, "import six\n\n\nsix.text_type\n"))
 
         stdout = self.run_sixer(2, path)
 

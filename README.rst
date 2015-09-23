@@ -208,6 +208,9 @@ Changelog
 
 * Version 0.6.1
 
+ - Code adding new imports respect better OpenStack coding style on imports.
+   For example, it adds two empty lines after imports, instead of a single
+   line.
  - Add --app command line option to specify the Python module of the
    application, to help sorting imports
  - Display the name of the operation which modified files
