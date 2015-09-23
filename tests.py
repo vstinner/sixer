@@ -340,6 +340,59 @@ class TestOperations(unittest.TestCase):
             "from __builtin__ import len, open",
             "from six.moves.builtins import len, open")
 
+    def test_six_moves_builtin(self):
+        # patch reload
+        self.check("six_moves",
+            """
+            import sys
+            reload(sys)
+            """,
+            """
+            import sys
+            from six.moves import reload_module
+
+            reload_module(sys)
+            """)
+
+        # patch reduce
+        self.check("six_moves",
+            """
+            reduce(lambda x, y: x*10+y, [1, 2, 3])
+            """,
+            """
+            from six.moves import reduce
+
+            reduce(lambda x, y: x*10+y, [1, 2, 3])
+            """)
+
+        # patch reload, don't patch reduce
+        self.check("six_moves",
+            """
+            import sys
+
+            from six.moves import reduce
+
+            print(reduce(lambda x, y: x*10+y, [1, 2, 3]))
+            reload(sys)
+            """,
+            """
+            import sys
+
+            from six.moves import reduce
+            from six.moves import reload_module
+
+            print(reduce(lambda x, y: x*10+y, [1, 2, 3]))
+            reload_module(sys)
+            """)
+
+        # don't touch moves.reduce()
+        self.check_unchanged("six_moves",
+            """
+            from six import moves
+
+            print(moves.reduce(lambda x, y: x*10+y, [1, 2, 3]))
+            """)
+
     def test_six_moves_mock_patch(self):
         # mock.patch()
         self.check("six_moves",

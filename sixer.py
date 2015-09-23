@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import collections
+import functools
 import optparse
 import os
 import re
@@ -90,7 +91,7 @@ EXPR_REGEX = r'%s(?:\.%s)*' % (SUBEXPR_REGEX, SUBEXPR_REGEX)
 SUBPARENT_REGEX= r'\([^()]+\)'
 # '(...)' or '(...(...)...)' (max: 1 level of nested parenthesis)
 PARENT_REGEX = r'\([^()]*(?:%s)?[^()]*\)' % SUBPARENT_REGEX
-IMPORT_GROUP_REGEX = re.compile(r"^(?:import|from) .*?\n\n",
+IMPORT_GROUP_REGEX = re.compile(r"^(?:import|from) .*?\n\n?",
                                 re.MULTILINE | re.DOTALL)
 IMPORT_NAME_REGEX = re.compile(r"^(?:import|from) (%s)" % IDENTIFIER_REGEX,
                                re.MULTILINE)
@@ -695,7 +696,7 @@ class SixMoves(Operation):
     NAME = "six_moves"
     DOC = ("replace Python 2 imports with six.moves imports")
 
-    SIX_MOVES = {
+    SIX_MODULE_MOVES = {
         # Python 2 import => six.moves import
         'BaseHTTPServer': 'BaseHTTPServer',
         'ConfigParser': 'configparser',
@@ -715,7 +716,7 @@ class SixMoves(Operation):
     }
 
     # 'BaseHTTPServer', '__builtin__', 'repr', ...
-    SIX_MOVES_REGEX = sorted(map(re.escape, SIX_MOVES.keys()))
+    SIX_MOVES_REGEX = sorted(map(re.escape, SIX_MODULE_MOVES.keys()))
     SIX_MOVES_REGEX = ("(?:%s)" % '|'.join(SIX_MOVES_REGEX))
 
     # 'import BaseHTTPServer', 'import repr as reprlib'
@@ -732,46 +733,89 @@ class SixMoves(Operation):
     MOCK_REGEX = re.compile(r"""(patch\(['"])(%s)\."""
                             % SIX_MOVES_REGEX, re.MULTILINE)
 
-    def patch(self, content):
-        add_imports = []
-        replace = []
+    SIX_BUILTIN_MOVES = {
+        # Python 2 builtin function => six.moves import
+        'reduce': 'reduce',
+        'reload': 'reload_module',
+    }
 
-        def replace_import(regs):
-            name = regs.group(1)
-            as_name = regs.group(2)
-            new_name = self.SIX_MOVES[name]
-            line = 'from six.moves import %s' % new_name
-            if as_name:
-                line += as_name
-            add_imports.append(line)
-            replace.append((name, new_name))
-            return ''
-
-        def replace_from(regs):
-            new_name = self.SIX_MOVES[regs.group(1)]
-            symbols = regs.group(2)
-            line = 'from six.moves.%s import %s' % (new_name, symbols)
-            add_imports.append(line)
-            return ''
-
-        new_content = self.IMPORT_REGEX.sub(replace_import, content)
-        new_content = self.FROM_IMPORT_REGEX.sub(replace_from, new_content)
-        for old_name, new_name in replace:
-            # Only match words
-            regex = r'\b%s\b' % re.escape(old_name)
-            new_content = re.sub(regex, new_name, new_content)
-        for line in add_imports:
-            names = parse_import(line)
-            new_content = self.patcher.add_import_names(new_content, line,
-                                                        names)
-
-        new_content = self.MOCK_REGEX.sub(self.replace_mock, new_content)
-        return new_content
+    # 'reduce(', 'reload(', but not '.reduce(' (exclude 'moves.reduce(...)')
+    BUILTIN_REGEX = re.compile(r'(?<!\.)\b(%s)\b( *\()'
+                               % '|'.join(SIX_BUILTIN_MOVES))
 
     def replace_mock(self, regs):
         name = regs.group(2)
-        new_name = self.SIX_MOVES[name]
+        new_name = self.SIX_MODULE_MOVES[name]
         return '%ssix.moves.%s.' % (regs.group(1), new_name)
+
+    def replace_import(self, add_imports, replace_names, regs):
+        name = regs.group(1)
+        as_name = regs.group(2)
+        new_name = self.SIX_MODULE_MOVES[name]
+        line = 'from six.moves import %s' % new_name
+        if as_name:
+            line += as_name
+        add_imports.add(line)
+        replace_names.add((name, new_name))
+        return ''
+
+    def replace_from(self, add_imports, regs):
+        new_name = self.SIX_MODULE_MOVES[regs.group(1)]
+        symbols = regs.group(2)
+        line = 'from six.moves.%s import %s' % (new_name, symbols)
+        add_imports.add(line)
+        return ''
+
+    def replace_builtin(self, add_imports, regs):
+        new_name = self.SIX_BUILTIN_MOVES[regs.group(1)]
+        suffix = regs.group(2)
+        line = 'from six.moves import %s' % new_name
+        add_imports.add(line)
+        return new_name + suffix
+
+    def replace_builtins(self, add_imports, content):
+        six_builtin_moves = dict(self.SIX_BUILTIN_MOVES)
+        for regs in self.BUILTIN_REGEX.finditer(content):
+            name = regs.group(1)
+            if name not in six_builtin_moves:
+                # already removed
+                continue
+            new_name = six_builtin_moves[name]
+
+            pattern = 'from six.moves import %s\n' % new_name
+            if pattern in content:
+                # the symbol comes from six.moves, no need to patch it
+                del six_builtin_moves[name]
+
+        builtin_regex2 = re.compile(r'(?<!\.)\b(%s)\b( *\()'
+                                   % '|'.join(six_builtin_moves))
+
+        replace_cb = functools.partial(self.replace_builtin, add_imports)
+        return builtin_regex2.sub(replace_cb, content)
+
+    def patch(self, content):
+        add_imports = set()
+        replace_names = set()
+
+        replace_cb = functools.partial(self.replace_import,
+                                       add_imports, replace_names)
+        content = self.IMPORT_REGEX.sub(replace_cb, content)
+
+        replace_cb = functools.partial(self.replace_from, add_imports)
+        content = self.FROM_IMPORT_REGEX.sub(replace_cb, content)
+
+        content = self.replace_builtins(add_imports, content)
+
+        for old_name, new_name in replace_names:
+            # Only match words
+            regex = r'\b%s\b' % re.escape(old_name)
+            content = re.sub(regex, new_name, content)
+        for line in sorted(add_imports):
+            names = parse_import(line)
+            content = self.patcher.add_import_names(content, line, names)
+
+        content = self.MOCK_REGEX.sub(self.replace_mock, content)
+        return content
 
     def check(self, content):
         pass

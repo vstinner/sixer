@@ -213,6 +213,8 @@ Changelog
  - Display the name of the operation which modified files
  - Display also the name of the operation in warnings
  - Add ``dict0`` and ``dict_add`` operations
+ - ``six_moves`` now also patches ``reduce()`` and ``reload()``. For example,
+   ``reduce()`` is replaced with ``six.moves.reduce()``.
  - ``six_moves`` now also patches ``mock.patch()``. For example,
    ``with mock.patch('__builtin__.open'): ...`` is replaced with
    ``with mock.patch('six.moves.builtin.open'): ...``
