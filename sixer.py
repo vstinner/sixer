@@ -50,6 +50,7 @@ THIRD_PARTY_MODULES = (
     "subunit",
     "testtools",
     "webob",
+    "wsme",
 )
 
 # Modules of the application
