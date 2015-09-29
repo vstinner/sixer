@@ -41,6 +41,7 @@ STDLIB_MODULES = set((
 THIRD_PARTY_MODULES = (
     "djanjo",
     "eventlet",
+    "iso8601",
     "keystoneclient",
     "mock",
     "mox3",
