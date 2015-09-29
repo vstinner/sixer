@@ -210,6 +210,8 @@ Changelog
 
  - urllib now emits a warning on unknown symbol, instead of raising an
    exception
+ - Write warnings to stderr instead of stdout and exit with error code 1
+   if a filename doesn't exist or a directory doesn't contain any .py file
 
 * Version 0.7 (2015-09-29)
 

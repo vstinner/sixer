@@ -15,14 +15,14 @@ SIXER = os.path.join(os.path.dirname(__file__), "sixer.py")
 
 
 @contextlib.contextmanager
-def replace_stdout():
-    old_stdout = sys.stdout
+def replace_stream(attr):
+    old_stream = getattr(sys, attr)
     try:
-        buffer = io.StringIO()
-        sys.stdout = buffer
-        yield buffer
+        stream = io.StringIO()
+        setattr(sys, attr, stream)
+        yield stream
     finally:
-        sys.stdout = old_stdout
+        setattr(sys, attr, old_stream)
 
 
 def run_sixer(operation, *paths):
@@ -59,7 +59,7 @@ class TestOperations(unittest.TestCase):
         with tempfile.NamedTemporaryFile("w+") as temp:
             temp.write(before)
             temp.flush()
-            with replace_stdout():
+            with replace_stream('stdout'), replace_stream('stderr'):
                 patcher.patch(temp.name)
             temp.seek(0)
             code = temp.read()
@@ -81,7 +81,7 @@ class TestOperations(unittest.TestCase):
 
             exitcode, stdout, stderr = run_sixer(operation, tmp.name)
             self.assertEqual(exitcode, 0)
-            self.assertEqual(stderr, '')
+            #self.assertEqual(stderr, '')
 
             tmp.seek(0)
             code = tmp.read()
@@ -811,22 +811,24 @@ class TestProgram(unittest.TestCase):
         path = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, path)
 
-        stdout = self.run_sixer(0, path)
-        msg = "WARNING: Directory %s doesn't contain any .py file\n" % path
-        self.assertIn(msg, stdout)
+        exitcode, stdout, stderr = run_sixer("all", path)
+        self.assertEqual(exitcode, 1)
         self.assertIn('Scanned 0 files\n', stdout)
+        msg = "WARNING: Directory %s doesn't contain any .py file\n" % path
+        self.assertIn(msg, stderr)
 
     def test_nonexistent_path(self):
         path = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, path)
 
         filename = os.path.join(path, 'nonexistent')
-        stdout = self.run_sixer(0, filename)
+        exitcode, stdout, stderr = run_sixer("all", filename)
+        self.assertEqual(exitcode, 1)
+        self.assertIn('Scanned 0 files\n', stdout)
 
         msg = ("WARNING: Path %s doesn't exist\n"
                % filename)
-        self.assertIn(msg, stdout)
-        self.assertIn('Scanned 0 files\n', stdout)
+        self.assertIn(msg, stderr)
 
     def test_nonexistent_operation(self):
         with tempfile.NamedTemporaryFile("w+", encoding="ASCII") as tmp:

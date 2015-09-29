@@ -982,6 +982,7 @@ class Patcher:
     IMPORT_SIX_REGEX = re.compile(r"^import six$", re.MULTILINE)
 
     def __init__(self, operations, options=None):
+        self.exitcode = 0
         self.warnings = []
         self.current_file = None
         if options is None:
@@ -1022,8 +1023,10 @@ class Patcher:
                     if os.path.isdir(path):
                         self.warning("Directory %s doesn't contain any "
                                      ".py file" % path)
+                        self.exitcode = 1
                     else:
                         self.warning("Path %s doesn't exist" % path)
+                        self.exitcode = 1
 
     def add_import_names(self, content, import_line, import_names):
         import_line = import_line.rstrip() + '\n'
@@ -1107,7 +1110,7 @@ class Patcher:
         return self.add_import_names(content, line, names)
 
     def _display_warning(self, msg):
-        print("WARNING: %s" % msg)
+        print("WARNING: %s" % msg, file=sys.stderr)
 
     def warning(self, msg):
         self._display_warning(msg)
@@ -1228,10 +1231,11 @@ class Patcher:
         if not self.options.quiet:
             print("Scanned %s files" % nfiles)
         if self.warnings:
-            print()
-            print("Warnings:")
+            print(file=sys.stderr)
+            print("Warnings:", file=sys.stderr)
         for msg in self.warnings:
             self._display_warning(msg)
+        sys.exit(self.exitcode)
 
 
 def main():
