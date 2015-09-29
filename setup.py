@@ -8,6 +8,7 @@
 #  - set release date in the changelog in README.rst
 #  - check that "python3 setup.py sdist" contains all files tracked by
 #    the SCM (Mercurial): update MANIFEST.in if needed
+#  - check README.rst formatting: rst2html README.rst README.html
 #  - git commit -a
 #  - git tag VERSION
 #  - git push --tags
@@ -33,7 +34,7 @@ with open("README.rst") as fp:
 
 install_options = {
     "name": "sixer",
-    "version": "0.7",
+    "version": "0.7.1",
     "license": "Apache License 2.0",
     "author": 'Victor Stinner',
     "author_email": 'victor.stinner@gmail.com',
