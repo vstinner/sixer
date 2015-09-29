@@ -164,6 +164,7 @@ Operations
 - ``unicode``:
 
   * replace ``unicode`` with ``six.text_type``
+  * replace ``(str, unicode)``  with ``six.string_types``
 
 - ``xrange``:
 
@@ -212,6 +213,8 @@ Changelog
    exception
  - Write warnings to stderr instead of stdout and exit with error code 1
    if a filename doesn't exist or a directory doesn't contain any .py file
+  - ``unicode`` operation also replaces ``(str, unicode)`` with
+    ``six.string_types``
 
 * Version 0.7 (2015-09-29)
 

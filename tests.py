@@ -182,6 +182,15 @@ class TestOperations(unittest.TestCase):
             value = six.text_type(data)
             """)
 
+        self.check("unicode",
+            "isinstance('hello', (str, unicode))",
+            """
+            import six
+
+
+            isinstance('hello', six.string_types)
+            """)
+
     def test_add_six_import(self):
         # only stdlib
         self.check("unicode",

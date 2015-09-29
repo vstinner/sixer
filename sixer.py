@@ -279,9 +279,12 @@ class Long(Operation):
 
 class Unicode(Operation):
     NAME = "unicode"
-    DOC = "replace unicode with six.text_type"
+    DOC = ("replace unicode with six.text_type,"
+           "replace (str, unicode) with six.string_types")
 
     UNICODE_REGEX = re.compile(r'\bunicode\b')
+
+    STR_UNICODE_REGEX = re.compile(r'\(str, *unicode\)')
 
     DEF_REGEX = re.compile(r'^ *def +%s *\(' % IDENTIFIER_REGEX, re.MULTILINE)
 
@@ -296,8 +299,8 @@ class Unicode(Operation):
             start = match.start() + len("six.text_type")
             end += len("six.text_type") - len("unicode")
 
-    def patch(self, content):
-        modified = False
+    def patch_unicode(self, content):
+        # replace unicode with six.text_type
         lines = content.splitlines(True)
         for index, line in enumerate(lines):
             # Ugly heuristic to exclude "import ...", "from ... import ...",
@@ -321,11 +324,15 @@ class Unicode(Operation):
             new_line = self._patch_line(line, start, end)
             if new_line is not None:
                 lines[index] = new_line
-                modified = True
-        if not modified:
-            return content
+        return ''.join(lines)
 
-        return self.patcher.add_import_six(''.join(lines))
+    def patch(self, content):
+        old_content = content
+        content = self.STR_UNICODE_REGEX.sub('six.string_types', content)
+        content = self.patch_unicode(content)
+        if content != old_content:
+            content = self.patcher.add_import_six(content)
+        return content
 
     def check(self, content):
         for line in content.splitlines():
