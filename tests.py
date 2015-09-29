@@ -515,6 +515,20 @@ class TestOperations(unittest.TestCase):
             """)
 
     def test_urllib_import(self):
+        # urllib.urlopen
+        self.check("urllib",
+            """
+            import urllib
+
+            urllib.urlopen(url)
+            """,
+            """
+            from six.moves import urllib
+
+
+            urllib.request.urlopen(url)
+            """)
+
         # urllib2.urlopen, urllib2.URLError
         self.check("urllib",
             """
@@ -547,20 +561,6 @@ class TestOperations(unittest.TestCase):
 
 
             urllib.parse.urlparse('')
-            """)
-
-        # import urllib2
-        self.check("urllib",
-            """
-            import urllib2
-
-            m = urllib2
-            """,
-            """
-            from six.moves import urllib
-
-
-            m = urllib
             """)
 
         # urlparse
@@ -616,6 +616,23 @@ class TestOperations(unittest.TestCase):
 
             quote("abc")
             """)
+
+    def test_urllib_unknown_symbol(self):
+        self.check("urllib",
+            """
+            import urllib2
+
+            # urllib2.open
+            urllib2.urlopen(url)
+            """,
+            """
+            from six.moves import urllib
+
+
+            # urllib2.open
+            urllib.request.urlopen(url)
+            """,
+            warnings=['Unknown urllib symbol: urllib2.open'])
 
     def test_all(self):
         self.check("all",

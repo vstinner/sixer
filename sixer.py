@@ -152,10 +152,13 @@ class Operation:
     def check(self, content):
         raise NotImplementedError
 
-    def warn_line(self, line):
+    def warning(self, message):
         message = ("[%s] %s: %s"
-                   % (self.NAME, self.patcher.current_file, line.strip()))
+                   % (self.NAME, self.patcher.current_file, message))
         self.patcher.warning(message)
+
+    def warn_line(self, line):
+        self.warning(line.strip())
 
 
 class Iteritems(Operation):
@@ -503,13 +506,12 @@ class Urllib(Operation):
     FROM_IMPORT_WARN_REGEX = re.compile(r"^from (?:urllib2?|urlparse) import",
                                         re.MULTILINE)
 
-    # urllib2.urlparse.attr or urllib2.urllib.attr
-    URLLIB2_MOD_ATTR_REGEX = re.compile(r"\burllib2\.(?:urllib|urlparse)\.(%s)"
+    # 'urllib.attr'
+    # 'urllib2.urlparse.attr'
+    # 'urllib2.attr'
+    # 'urlparse.attr'
+    URLLIB_ATTR_REGEX = re.compile(r"\b(?:urllib|urllib2(?:\.(?:urllib|urlparse))?|urlparse)\.(%s)"
                                         % IDENTIFIER_REGEX)
-
-    # urllib.attr or urllib2.attr
-    URLLIB_ATTR_REGEX = re.compile(r"\b(?:urllib2?|urlparse)\.(%s)"
-                                   % IDENTIFIER_REGEX)
 
     # 'urllib2' but not 'urllib2.parse_http_list'
     URLLIB2_REGEX = re.compile(r"\burllib2\b(?!\.parse_http_list)")
@@ -526,6 +528,7 @@ class Urllib(Operation):
             'HTTPCookieProcessor',
             'HTTPPasswordMgrWithDefaultRealm',
             'HTTPSHandler',
+            'OpenerDirector',
             'ProxyHandler',
             'Request',
             'build_opener',
@@ -568,7 +571,8 @@ class Urllib(Operation):
         try:
             submodule = self.URLLIB[name]
         except KeyError:
-            raise Exception("unknown urllib symbol: %s" % text)
+            self.warning("Unknown urllib symbol: %s" % text)
+            return text
         return 'urllib.%s.%s' % (submodule, name)
 
     def replace_import_from(self, add_imports, regs):
@@ -600,9 +604,8 @@ class Urllib(Operation):
             return content
         content = new_content
 
-        content = self.URLLIB2_MOD_ATTR_REGEX.sub(self.replace, content)
         content = self.URLLIB_ATTR_REGEX.sub(self.replace, content)
-        content = self.URLLIB2_REGEX.sub('urllib', content)
+        #content = self.URLLIB2_REGEX.sub('urllib', content)
         return self.patcher.add_import(content,
                                        "from six.moves import urllib")
 

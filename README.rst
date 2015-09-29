@@ -206,6 +206,11 @@ Or run tests manually: type ``python3 tests.py``.
 Changelog
 ---------
 
+* Version 0.7.1
+
+ - urllib now emits a warning on unknown symbol, instead of raising an
+   exception
+
 * Version 0.7 (2015-09-29)
 
  - Add new ``dict0``, ``dict_add`` and ``except`` operations
