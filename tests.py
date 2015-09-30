@@ -25,8 +25,8 @@ def replace_stream(attr):
         setattr(sys, attr, old_stream)
 
 
-def run_sixer(operation, *paths):
-    args = (sys.executable, SIXER, operation) + paths
+def run_sixer(operation, *args):
+    args = (sys.executable, SIXER, operation) + args
     proc = subprocess.Popen(args,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE)
@@ -51,8 +51,11 @@ class TestOperations(unittest.TestCase):
     def _check(self, operation, before, after, **kw):
         warnings = kw.pop('warnings', None)
         ignore_warnings = kw.pop('ignore_warnings', False)
+        app = kw.pop('app', None)
 
         patcher = sixer.Patcher((operation,))
+        if app:
+            patcher.application_modules.add(app)
         for attr, value in kw.items():
             setattr(patcher.options, attr, value)
 
@@ -74,12 +77,13 @@ class TestOperations(unittest.TestCase):
             else:
                 self.assertEqual(patcher.warnings, [])
 
-    def check_program(self, operation, before, after):
+    def check_program(self, operation, before, after, *args):
         with tempfile.NamedTemporaryFile("w+") as tmp:
             tmp.write(before)
             tmp.flush()
 
-            exitcode, stdout, stderr = run_sixer(operation, tmp.name)
+            args = args + (tmp.name,)
+            exitcode, stdout, stderr = run_sixer(operation, *args)
             self.assertEqual(exitcode, 0)
             #self.assertEqual(stderr, '')
 
@@ -89,8 +93,8 @@ class TestOperations(unittest.TestCase):
         self.assertEqual(code, after)
 
     def check(self, operation, before, after, **kw):
-        before = textwrap.dedent(before).strip()
-        after = textwrap.dedent(after).strip()
+        before = textwrap.dedent(before).strip() + "\n"
+        after = textwrap.dedent(after).strip() + "\n"
         check_program = kw.pop('check_program', True)
 
         # Ensure that the code is patched as expected
@@ -101,10 +105,53 @@ class TestOperations(unittest.TestCase):
 
         # Test command line
         if check_program:
-            self.check_program(operation, before, after)
+            args = []
+            app = kw.get('app')
+            if app:
+                args.append("--app=%s" % app)
+            self.check_program(operation, before, after, *args)
 
     def check_unchanged(self, operation, code, **kw):
         self.check(operation, code, code, **kw)
+
+    def test_add_import(self):
+        # import ...
+        self.check("urllib",
+            """
+            import StringIO
+            import urllib2
+
+            import cue.tests.functional.fixtures.base as base
+
+            urllib2.urlopen(url)
+            """,
+            """
+            import StringIO
+
+            from six.moves import urllib
+
+            import cue.tests.functional.fixtures.base as base
+
+            urllib.request.urlopen(url)
+            """,
+            app="cue")
+
+        # from ... import ...
+        self.check("urllib",
+            """
+            import StringIO
+            from urllib2 import urlopen
+
+            import cue.tests.functional.fixtures.base as base
+            """,
+            """
+            import StringIO
+
+            from six.moves.urllib.request import urlopen
+
+            import cue.tests.functional.fixtures.base as base
+            """,
+            app="cue")
 
     def test_raise2(self):
         self.check("raise",
@@ -183,11 +230,15 @@ class TestOperations(unittest.TestCase):
             """)
 
         self.check("unicode",
-            "isinstance('hello', (str, unicode))",
+            """
+            isinstance('hello', (str,unicode))
+            isinstance('hello', (str, unicode))
+            """,
             """
             import six
 
 
+            isinstance('hello', six.string_types)
             isinstance('hello', six.string_types)
             """)
 

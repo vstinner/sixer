@@ -215,6 +215,8 @@ Changelog
    if a filename doesn't exist or a directory doesn't contain any .py file
   - ``unicode`` operation also replaces ``(str, unicode)`` with
     ``six.string_types``
+  - When removing an import, don't remove the empty line following the import
+    if the empty line is followed by a second import
 
 * Version 0.7 (2015-09-29)
 

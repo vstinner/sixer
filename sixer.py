@@ -72,12 +72,18 @@ APPLICATION_MODULES = set((
 # and Match objects are convinient to modify code in-place
 
 def import_regex(name):
-    return re.compile(r"^import %s\n\n?" % name,
-                      re.MULTILINE)
+    # 'import test\n', 'import test\n\n'
+    # but not ony match 'import test\n' in 'import test\n\nimport test\n'
+    # (don't match the second newline if it's followed by an import)
+    regex = r"^import %s\n(?:\n(?!from|import))?" % name
+    return re.compile(regex, re.MULTILINE)
 
 def from_import_regex(module, symbol):
-    return re.compile(r"^from %s import %s\n\n?" % (module, symbol),
-                      re.MULTILINE)
+    # 'from test import symbol\n', 'from test import symbol\n\n'
+    # but not ony match 'from test import symbol\n' in 'from test import symbol\n\nimport test2'
+    # (don't match the second newline if it's followed by an import)
+    regex = r"^from %s import %s\n(?:\n(?!from|import))?" % (module, symbol)
+    return re.compile(regex, re.MULTILINE)
 
 # 'identifier', 'var3', 'NameCamelCase'
 IDENTIFIER_REGEX = r'[a-zA-Z_][a-zA-Z0-9_]*'
@@ -505,9 +511,8 @@ class Urllib(Operation):
     IMPORT_URLLIB_REGEX = import_regex(r"\b(?:urllib2?|urlparse)\b")
 
     # 'from urlparse import symbol, symbol2'
-    FROM_IMPORT_REGEX = re.compile(r"^from (urllib2?|urlparse) import (%s)\n\n?"
-                                   % FROM_IMPORT_SYMBOLS_REGEX,
-                                   re.MULTILINE)
+    FROM_IMPORT_REGEX = from_import_regex('(urllib2?|urlparse)',
+                                          '(%s)' % FROM_IMPORT_SYMBOLS_REGEX)
 
     # 'from urlparse import'
     FROM_IMPORT_WARN_REGEX = re.compile(r"^from (?:urllib2?|urlparse) import",
@@ -739,14 +744,11 @@ class SixMoves(Operation):
     SIX_MOVES_REGEX = ("(?:%s)" % '|'.join(SIX_MOVES_REGEX))
 
     # 'import BaseHTTPServer', 'import repr as reprlib'
-    IMPORT_REGEX = re.compile(r"^import (%s)( as %s)?\n\n?"
-                              % (SIX_MOVES_REGEX, IDENTIFIER_REGEX),
-                              re.MULTILINE)
+    IMPORT_REGEX = import_regex(r"(%s)( as %s)?"
+                                % (SIX_MOVES_REGEX, IDENTIFIER_REGEX))
     # 'from BaseHTTPServer import ...'
-    FROM_IMPORT_REGEX = re.compile(r"^from (%s) import (%s)\n\n?"
-                                   % (SIX_MOVES_REGEX,
-                                      FROM_IMPORT_SYMBOLS_REGEX),
-                                   re.MULTILINE)
+    FROM_IMPORT_REGEX = from_import_regex(r"(%s)" % SIX_MOVES_REGEX,
+                                          r"(%s)" % FROM_IMPORT_SYMBOLS_REGEX)
 
     # "patch('__builtin__."
     MOCK_REGEX = re.compile(r"""(patch\(['"])(%s)\."""
@@ -997,7 +999,12 @@ class Patcher:
             options.max_range = MAX_RANGE
             options.to_stdout = False
             options.quiet = False
+            options.app = False
         self.options = options
+
+        self.application_modules = set(APPLICATION_MODULES)
+        if options.app:
+            self.application_modules.add(options.app)
 
         operations = set(operations)
         if All.NAME in operations:
@@ -1061,7 +1068,7 @@ class Patcher:
                        for name in imports):
                     # oslo* are third-party modules
                     break
-                if any(name in APPLICATION_MODULES for name in imports):
+                if any(name in self.application_modules for name in imports):
                     # application import, add import six before in a new group
                     create_new_import_group = (start, False)
                     break
@@ -1219,9 +1226,6 @@ class Patcher:
                 print()
                 Patcher.usage(parser)
                 sys.exit(1)
-
-        if options.app:
-            APPLICATION_MODULES.add(options.app)
 
         return options, operations, paths
 
