@@ -377,6 +377,11 @@ class TestOperations(unittest.TestCase):
             "values = (0L, 1L, 12L, 123L, 1234L, 12345L)",
             "values = (0, 1, 12, 123, 1234, 12345)")
 
+        # lower case
+        self.check("long",
+            "x = 1l",
+            "x = 1")
+
         # octal numbers are unchanged
         self.check_unchanged("long",
             "values = (00L, 01L, 012L, 0123L, 01234L, 012345L)",

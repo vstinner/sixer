@@ -217,6 +217,7 @@ Changelog
     ``six.string_types``
   - When removing an import, don't remove the empty line following the import
     if the empty line is followed by a second import
+  - ``long`` also replaces ``1l`` (lower case L suffix for long numbers)
 
 * Version 0.7 (2015-09-29)
 

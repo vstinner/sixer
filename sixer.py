@@ -267,10 +267,10 @@ class Long(Operation):
     DOC = "replace 123L with 123"
 
     # '123L' but not '0123L'
-    REGEX = re.compile(r"\b([1-9][0-9]*|0)L")
+    REGEX = re.compile(r"\b([1-9][0-9]*|0)[lL]")
 
     # '123L', '0123L'
-    CHECK_REGEX = re.compile(r"^.*\b[0-9]+L.*$", re.MULTILINE)
+    CHECK_REGEX = re.compile(r"^.*\b[0-9]+[lL].*$", re.MULTILINE)
 
     def replace(self, regs):
         return regs.group(1)
