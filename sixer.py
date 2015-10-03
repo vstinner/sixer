@@ -269,7 +269,7 @@ class Long(Operation):
     # '123L' but not '0123L'
     REGEX = re.compile(r"\b([1-9][0-9]*|0)[lL]")
 
-    # '123L', '0123L'
+    # '123L', '123l', '0123L'
     CHECK_REGEX = re.compile(r"^.*\b[0-9]+[lL].*$", re.MULTILINE)
 
     def replace(self, regs):
@@ -525,9 +525,6 @@ class Urllib(Operation):
     URLLIB_ATTR_REGEX = re.compile(r"\b(?:urllib|urllib2(?:\.(?:urllib|urlparse))?|urlparse)\.(%s)"
                                         % IDENTIFIER_REGEX)
 
-    # 'urllib2' but not 'urllib2.parse_http_list'
-    URLLIB2_REGEX = re.compile(r"\burllib2\b(?!\.parse_http_list)")
-
     SIX_MOVES_URLLIB = {
         # six.moves.urllib submodule => Python 2 urllib/urllib2 symbols
         'error': (
@@ -617,7 +614,6 @@ class Urllib(Operation):
         content = new_content
 
         content = self.URLLIB_ATTR_REGEX.sub(self.replace, content)
-        #content = self.URLLIB2_REGEX.sub('urllib', content)
         return self.patcher.add_import(content,
                                        "from six.moves import urllib")
 
