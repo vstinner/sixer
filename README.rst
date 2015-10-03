@@ -213,11 +213,11 @@ Changelog
    exception
  - Write warnings to stderr instead of stdout and exit with error code 1
    if a filename doesn't exist or a directory doesn't contain any .py file
-  - ``unicode`` operation also replaces ``(str, unicode)`` with
-    ``six.string_types``
-  - When removing an import, don't remove the empty line following the import
-    if the empty line is followed by a second import
-  - ``long`` also replaces ``1l`` (lower case L suffix for long numbers)
+ - ``unicode`` operation also replaces ``(str, unicode)`` with
+   ``six.string_types``
+ - When removing an import, don't remove the empty line following the import
+   if the empty line is followed by a second import
+ - ``long`` also replaces ``1l`` (lower case L suffix for long numbers)
 
 * Version 0.7 (2015-09-29)
 
