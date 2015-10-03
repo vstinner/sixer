@@ -249,41 +249,41 @@ Changelog
 
 * Version 0.5 (2015-07-08)
 
-  - six_moves: support "import module as name" syntax and add cPickle module
-  - Add --to-stdout, --quiet and --max-range command line options
-  - Emit a warning if the directory does not contain any .py file or
-    if the path does not exist
-  - Test also directly the sixer.py program
+ - six_moves: support "import module as name" syntax and add cPickle module
+ - Add --to-stdout, --quiet and --max-range command line options
+ - Emit a warning if the directory does not contain any .py file or
+   if the path does not exist
+ - Test also directly the sixer.py program
 
 * Version 0.4 (2015-06-09)
 
-  - sixer.py now accepts multiple filenames on the command line, but
-    operations becomes the first command line parameter
-  - the ``stringio`` operation now also replaces cStringIO and
-    ``from StringIO import StringIO``
-  - urllib: replace also urlparse.symbol
-  - six_moves: support more modules: Cookie, HTMLParser, SimpleHTTPServer,
-    cookielib, xmlrpclib, etc.
-  - Refactor operations as classes to cleanup the code
+ - sixer.py now accepts multiple filenames on the command line, but
+   operations becomes the first command line parameter
+ - the ``stringio`` operation now also replaces cStringIO and
+   ``from StringIO import StringIO``
+ - urllib: replace also urlparse.symbol
+ - six_moves: support more modules: Cookie, HTMLParser, SimpleHTTPServer,
+   cookielib, xmlrpclib, etc.
+ - Refactor operations as classes to cleanup the code
 
 * Version 0.3.1 (2015-05-27)
 
-  - Fix the "all" operation
-  - six_moves knows more modules
-  - urllib: add pathname2url, don't touch urllib2.parse_http_list()
+ - Fix the "all" operation
+ - six_moves knows more modules
+ - urllib: add pathname2url, don't touch urllib2.parse_http_list()
 
 * Version 0.3 (2015-05-27)
 
-  - First command line parameter can now be a filename
-  - Add "all", "basestring", "iterkeys", "six_moves", "stringio"
-    and "urllib" operations
-  - Enhance the knownledge tables for modules (stdlib, third parties,
-    applications)
-  - Ignore unparsable import lines when adding an import
+ - First command line parameter can now be a filename
+ - Add "all", "basestring", "iterkeys", "six_moves", "stringio"
+   and "urllib" operations
+ - Enhance the knownledge tables for modules (stdlib, third parties,
+   applications)
+ - Ignore unparsable import lines when adding an import
 
 * Version 0.2 (2015-05-12):
 
-  - First public release
+ - First public release
 
 
 See also
@@ -291,6 +291,7 @@ See also
 
 * `Six documentation <https://pythonhosted.org/six/>`_
 * `2to6 <https://github.com/limodou/2to6>`_
+* `modernize <https://pypi.python.org/pypi/modernize>`_
 * Python 3 porting book: `Language differences and workarounds
   <http://python3porting.com/differences.html>`_
 * `getpython3 <http://getpython3.com/>`_
