@@ -207,7 +207,7 @@ Or run tests manually: type ``python3 tests.py``.
 Changelog
 ---------
 
-* Version 0.7.1
+* Version 0.8 (2015-10-03)
 
  - urllib now emits a warning on unknown symbol, instead of raising an
    exception
