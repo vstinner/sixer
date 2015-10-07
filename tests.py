@@ -387,6 +387,16 @@ class TestOperations(unittest.TestCase):
             "values = (00L, 01L, 012L, 0123L, 01234L, 012345L)",
             warnings=["values = (00L, 01L, 012L, 0123L, 01234L, 012345L)"])
 
+        # (int, long)
+        self.check("long",
+            "isinstance(s, (int, long))",
+            """
+            import six
+
+
+            isinstance(s, six.integer_types)
+            """)
+
     def test_basestring(self):
         self.check("basestring",
             "isinstance(foo, basestring)",

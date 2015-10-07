@@ -264,7 +264,10 @@ class Next(Operation):
 
 class Long(Operation):
     NAME = "long"
-    DOC = "replace 123L with 123"
+    DOC = "replace 123L with 123, replace (int, long) with six.integer_types"
+
+    # (int, long)
+    INT_LONG_REGEX = re.compile(r'\(int, *long\)')
 
     # '123L' but not '0123L'
     REGEX = re.compile(r"\b([1-9][0-9]*|0)[lL]")
@@ -276,7 +279,11 @@ class Long(Operation):
         return regs.group(1)
 
     def patch(self, content):
-        return self.REGEX.sub(self.replace, content)
+        content = self.REGEX.sub(self.replace, content)
+        new_content = self.INT_LONG_REGEX.sub('six.integer_types', content)
+        if new_content != content:
+            content = self.patcher.add_import_six(new_content)
+        return content
 
     def check(self, content):
         for match in self.CHECK_REGEX.finditer(content):

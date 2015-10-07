@@ -112,6 +112,7 @@ Operations
 - ``long``:
 
   * replace ``123L`` with ``123``
+  * replace ``(int, long)`` with ``six.integer_types``
   * octal number are unchanged (ex: ``010L``)
 
 - ``next``:
@@ -206,6 +207,11 @@ Or run tests manually: type ``python3 tests.py``.
 
 Changelog
 ---------
+
+* Version 0.8.1
+
+  - ``long`` operation now also replaces ``(int, long)`` with
+    ``six.integer_types``
 
 * Version 0.8 (2015-10-03)
 
