@@ -6,7 +6,6 @@ import os
 import re
 import sys
 import tokenize
-import types
 
 # Maximum range which creates a list on Python 2. For example, xrange(10) can
 # be replaced with range(10) without "from six.moves import range".
@@ -1025,12 +1024,6 @@ class Patcher:
         self.exitcode = 0
         self.warnings = []
         self.current_file = None
-        if options is None:
-            options = types.SimpleNamespace()
-            options.max_range = MAX_RANGE
-            options.to_stdout = False
-            options.quiet = False
-            options.app = False
         self.options = options
 
         self.application_modules = set(APPLICATION_MODULES)
@@ -1195,16 +1188,19 @@ class Patcher:
                 self.write_stdout(content)
             return False
 
-        with open(filename, "rb") as fp:
-            encoding, _ = tokenize.detect_encoding(fp.readline)
-
         if not self.options.quiet:
             print("Patch %s with %s" % (filename, ', '.join(sorted(modified))))
+
         if not self.options.to_stdout:
-            with open(filename, "w", encoding=encoding) as fp:
-                fp.write(content)
+            if self.options.write:
+                with open(filename, "rb") as fp:
+                    encoding, _ = tokenize.detect_encoding(fp.readline)
+
+                with open(filename, "w", encoding=encoding) as fp:
+                    fp.write(content)
         else:
             self.write_stdout(content)
+
         self.check(content)
         return True
 
@@ -1232,6 +1228,9 @@ class Patcher:
             '-c', '--to-stdout', action="store_true",
             help='Write output into stdout instead of modify files in-place '
                  '(imply --quiet option)')
+        parser.add_option(
+            '-w', '--write', action="store_true",
+            help='Really modify files in place')
         parser.add_option(
             '--app', type="str",
             help='Name of the application module, used to sort and group '
@@ -1268,6 +1267,10 @@ class Patcher:
         return options, operations, paths
 
     def main(self, paths):
+        if not self.options.write and not self.options.quiet:
+            print("(Dry run: don't modify files)", file=sys.stderr)
+            print(file=sys.stderr)
+
         nfiles = 0
         for filename in self.walk(paths):
             try:
@@ -1284,6 +1287,10 @@ class Patcher:
             print("Warnings:", file=sys.stderr)
         for msg in self.warnings:
             self._display_warning(msg)
+        if not self.options.write and not self.options.quiet:
+            print(file=sys.stderr)
+            print("Now retry with --write option to really modify files "
+                  "inplace", file=sys.stderr)
         sys.exit(self.exitcode)
 
 

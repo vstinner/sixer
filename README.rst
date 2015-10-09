@@ -19,7 +19,7 @@ Usage
 
 ::
 
-    sixer.py <operation> <directories or filenames>
+    sixer.py [--write] [options] <operation> <directories or filenames>
 
 sixer.py displays the name of patched files. It displays warnings for code
 unchanged but which looks suspicious.
@@ -32,38 +32,14 @@ operation to apply all operations. If an operation name is prefixed by ``-``,
 it will be excluded. For example, ``all,-iteritems`` applies all operations
 except ``iteritems``.
 
-Warning: sixer.py modifies files inplace without asking for confirmation. It's
-better to use it in a project managed by a source control manager (ex: git).
+By default, sixer uses a dry run: files are not modified. Add ``--write`` (or
+``-w``) option to modify files in place. It's better to use sixer in a project
+managed by a source control manager (ex: git) to see differences and revert
+unwanted changes. The original files are not kept.
 
-Available operations:
+Use ``--help`` to see all available options.
 
-- all
-- basestring
-- dict0
-- dict_add
-- except
-- iteritems
-- iterkeys
-- itertools
-- itervalues
-- long
-- next
-- raise
-- six_moves
-- stringio
-- unicode
-- urllib
-- xrange
-
-
-Installation
-------------
-
-To install sixer, type::
-
-    pip3 install sixer
-
-sixer requires Python 3, it doesn't work on Python 2.
+See below for the list of available operations.
 
 
 Operations
@@ -185,6 +161,16 @@ Operations
   * don't add the import if all ranges have 1024 items or less
 
 
+Installation
+------------
+
+To install sixer, type::
+
+    pip3 install sixer
+
+sixer requires Python 3, it doesn't work on Python 2.
+
+
 Adding the six import
 ---------------------
 
@@ -219,8 +205,10 @@ Or run tests manually: type ``python3 tests.py``.
 Changelog
 ---------
 
-* Version 0.8.1
+* Version 0.9
 
+  - sixer doesn't modify files by default anymore. Add ``--write`` to really
+    modify files inplace.
   - ``long`` operation now also replaces ``(int, long)`` with
     ``six.integer_types``
   - ``itertools`` now also replaces ``ifilterfalse()``, ``izip()`` and

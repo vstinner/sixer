@@ -8,6 +8,7 @@ import subprocess
 import sys
 import tempfile
 import textwrap
+import types
 import unittest
 
 
@@ -26,7 +27,7 @@ def replace_stream(attr):
 
 
 def run_sixer(operation, *args):
-    args = (sys.executable, SIXER, operation) + args
+    args = (sys.executable, SIXER, '--write', operation) + args
     proc = subprocess.Popen(args,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE)
@@ -53,7 +54,14 @@ class TestOperations(unittest.TestCase):
         ignore_warnings = kw.pop('ignore_warnings', False)
         app = kw.pop('app', None)
 
-        patcher = sixer.Patcher((operation,))
+        options = types.SimpleNamespace()
+        options.max_range = sixer.MAX_RANGE
+        options.to_stdout = False
+        options.quiet = False
+        options.app = False
+        options.write = True
+
+        patcher = sixer.Patcher((operation,), options)
         if app:
             patcher.application_modules.add(app)
         for attr, value in kw.items():
