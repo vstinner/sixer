@@ -210,7 +210,7 @@ Resources to port code to Python 3
 Changelog
 ---------
 
-* Version 0.9
+* Version 1.0 (2015-10-16)
 
   - sixer doesn't modify files by default anymore. Add ``--write`` to really
     modify files inplace.
