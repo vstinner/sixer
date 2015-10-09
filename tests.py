@@ -941,7 +941,7 @@ class TestProgram(unittest.TestCase):
 
         self.assertEqual(exitcode, 1)
         self.assertEqual(stderr, '')
-        expected = ("invalid operation: nonexistent\n"
+        expected = ("invalid operation: 'nonexistent'\n"
                     "\n"
                     "Usage: sixer.py [options]")
         self.assertTrue(stdout.startswith(expected), stdout)

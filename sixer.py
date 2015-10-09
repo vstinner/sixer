@@ -1041,6 +1041,11 @@ class Patcher:
         if All.NAME in operations:
             operations |= set(OPERATION_NAMES)
             operations.discard(All.NAME)
+        discard = [operation for operation in operations
+                   if operation.startswith('-')]
+        for name in discard:
+            operations.discard(name)
+            operations.discard(name[1:])
         self.operations = [OPERATION_BY_NAME[name](self)
                            for name in operations]
 
@@ -1252,8 +1257,10 @@ class Patcher:
         paths = args[1:]
 
         for operation in operations:
+            if operation.startswith("-"):
+                operation = operation[1:]
             if operation not in OPERATION_NAMES:
-                print("invalid operation: %s" % operation)
+                print("invalid operation: %r" % operation)
                 print()
                 Patcher.usage(parser)
                 sys.exit(1)

@@ -27,7 +27,10 @@ unchanged but which looks suspicious.
 If you pass a directory, sixer.py searchs for ``.py`` files in all
 subdirectories.
 
-<operation> can be a list of operations separated by commas
+``<operation>`` can be a list of operations separated by commas. Use ``all`` as
+operation to apply all operations. If an operation name is prefixed by ``-``,
+it will be excluded. For example, ``all,-iteritems`` applies all operations
+except ``iteritems``.
 
 Warning: sixer.py modifies files inplace without asking for confirmation. It's
 better to use it in a project managed by a source control manager (ex: git).
@@ -223,6 +226,9 @@ Changelog
   - ``itertools`` now also replaces ``ifilterfalse()``, ``izip()`` and
     ``izip_longest()`` of the ``itertools`` module
   - ``six_moves`` now also replaces ``unichr(ch)`` with ``six.unichr(ch)``
+  - command line: it's now possible to exclude an operation using ``-`` prefix.
+     For example, ``all,-iteritems`` applies all operations except
+     ``iteritems``.
 
 * Version 0.8 (2015-10-03)
 
