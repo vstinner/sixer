@@ -13,6 +13,8 @@ emits warnings when code was not patched or looks suspicious.
 * `sixer in the Python Cheeseshop (PyPI)
   <https://pypi.python.org/pypi/sixer>`_
 
+See also the `six module documentation <https://pythonhosted.org/six/>`_.
+
 
 Usage
 -----
@@ -199,7 +201,7 @@ Or run tests manually: type ``python3 tests.py``.
 Resources to port code to Python 3
 ----------------------------------
 
-* `Six documentation <https://pythonhosted.org/six/>`_
+* `six module documentation <https://pythonhosted.org/six/>`_
 * `2to6 <https://github.com/limodou/2to6>`_
 * `modernize <https://pypi.python.org/pypi/modernize>`_
 * Python 3 porting book: `Language differences and workarounds
@@ -212,16 +214,16 @@ Changelog
 
 * Version 1.0 (2015-10-16)
 
-  - sixer doesn't modify files by default anymore. Add ``--write`` to really
-    modify files inplace.
-  - ``long`` operation now also replaces ``(int, long)`` with
-    ``six.integer_types``
-  - ``itertools`` now also replaces ``ifilterfalse()``, ``izip()`` and
-    ``izip_longest()`` of the ``itertools`` module
-  - ``six_moves`` now also replaces ``unichr(ch)`` with ``six.unichr(ch)``
-  - command line: it's now possible to exclude an operation using ``-`` prefix.
-     For example, ``all,-iteritems`` applies all operations except
-     ``iteritems``.
+ - sixer doesn't modify files by default anymore. Add ``--write`` to really
+   modify files inplace.
+ - ``long`` operation now also replaces ``(int, long)`` with
+   ``six.integer_types``
+ - ``itertools`` now also replaces ``ifilterfalse()``, ``izip()`` and
+   ``izip_longest()`` of the ``itertools`` module
+ - ``six_moves`` now also replaces ``unichr(ch)`` with ``six.unichr(ch)``
+ - command line: it's now possible to exclude an operation using ``-`` prefix.
+   For example, ``all,-iteritems`` applies all operations except
+   ``iteritems``.
 
 * Version 0.8 (2015-10-03)
 
