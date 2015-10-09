@@ -1,15 +1,15 @@
 Sixer
 =====
 
-sixer is a tool adding Python 3 support to a Python 2 project.
-
-sixer was written to produces patches to port OpenStack to Python 3.
+sixer is a tool adding Python 3 support to a Python 2 project. It was written
+to produces patches to port OpenStack to Python 3. It is focused on supporting
+Python 2.7 and 3.4.
 
 It uses basic regular expressions to find code which needs to be modified. It
 emits warnings when code was not patched or looks suspicious.
 
 * `sixer project at Github
-  <https://github.com/haypo/sixer>`_
+  <https://github.com/haypo/sixer>`_ (source, bug tracker)
 * `sixer in the Python Cheeseshop (PyPI)
   <https://pypi.python.org/pypi/sixer>`_
 
@@ -19,18 +19,16 @@ Usage
 
 ::
 
-    sixer.py [--write] [options] <operation> <directories or filenames>
+    sixer.py [--write] [options] [all|operation1,operation2,...] <directories or filenames>
 
-sixer.py displays the name of patched files. It displays warnings for code
-unchanged but which looks suspicious.
+sixer.py displays the name of patched files. It displays warnings for
+suspicious code which may have to be ported manually.
 
-If you pass a directory, sixer.py searchs for ``.py`` files in all
-subdirectories.
+The first parameter can be a list of operations separated by commas. Use
+``"all"`` to apply all operations. Operation prefixed by ``-`` are excluded.
+For example, ``"all,-iteritems"`` applies all operations except ``iteritems``.
 
-``<operation>`` can be a list of operations separated by commas. Use ``all`` as
-operation to apply all operations. If an operation name is prefixed by ``-``,
-it will be excluded. For example, ``all,-iteritems`` applies all operations
-except ``iteritems``.
+For directories, sixer.py searchs for ``.py`` files in all subdirectories.
 
 By default, sixer uses a dry run: files are not modified. Add ``--write`` (or
 ``-w``) option to modify files in place. It's better to use sixer in a project
@@ -176,19 +174,15 @@ Adding the six import
 
 When an operation uses ``six``, ``import six`` may be added. sixer repects
 OpenStack coding style rules to add the import: imports grouped by standard
-library, third party and local imports; and imports must be are sorted.
-
-The sixer tool was initially written to produce patches for OpenStack which
-respects OpenStack coding style, especially the complex rule to group and sort
-imports.
+library, third party and application imports; and imports must be are sorted.
 
 
 Limitations
 -----------
 
-The project is based on regular expressions, it produces false positives
-(invalid changes). For example, some operations replace patterns in strings,
-comments or function names even if it doesn't make sense.
+Since the project is implemented with regular expressions, it can produce false
+positives (invalid changes). For example, some operations replace patterns in
+strings, comments or function names even if it doesn't make sense.
 
 Try also the 2to6 project which may be more reliable.
 
@@ -196,10 +190,21 @@ Try also the 2to6 project which may be more reliable.
 Tests
 -----
 
-To run tests, type ``tox``. Type ``pip install tox`` to install the ``tox``
-program.
+To run tests, type ``tox``. Type ``pip install -U tox`` to install or update
+the ``tox`` program.
 
 Or run tests manually: type ``python3 tests.py``.
+
+
+Resources to port code to Python 3
+----------------------------------
+
+* `Six documentation <https://pythonhosted.org/six/>`_
+* `2to6 <https://github.com/limodou/2to6>`_
+* `modernize <https://pypi.python.org/pypi/modernize>`_
+* Python 3 porting book: `Language differences and workarounds
+  <http://python3porting.com/differences.html>`_
+* `getpython3 <http://getpython3.com/>`_
 
 
 Changelog
@@ -295,15 +300,4 @@ Changelog
 * Version 0.2 (2015-05-12):
 
  - First public release
-
-
-See also
---------
-
-* `Six documentation <https://pythonhosted.org/six/>`_
-* `2to6 <https://github.com/limodou/2to6>`_
-* `modernize <https://pypi.python.org/pypi/modernize>`_
-* Python 3 porting book: `Language differences and workarounds
-  <http://python3porting.com/differences.html>`_
-* `getpython3 <http://getpython3.com/>`_
 
