@@ -518,6 +518,17 @@ class TestOperations(unittest.TestCase):
             "with patch('__builtin__.open'): pass",
             "with patch('six.moves.builtins.open'): pass")
 
+    def test_six_moves_functions(self):
+        # unichr()
+        self.check("six_moves",
+            "print(unichr(0x20ac))",
+            """
+            import six
+
+
+            print(six.unichr(0x20ac))
+            """)
+
     def test_stringio(self):
         # import StringIO
         self.check("stringio",

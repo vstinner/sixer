@@ -721,7 +721,7 @@ class Except(Operation):
 
 class SixMoves(Operation):
     NAME = "six_moves"
-    DOC = ("replace Python 2 imports with six.moves imports")
+    DOC = ("replace Python 2 imports with six and six.moves imports")
 
     SIX_MODULE_MOVES = {
         # Python 2 import => six.moves import
@@ -759,13 +759,25 @@ class SixMoves(Operation):
 
     SIX_BUILTIN_MOVES = {
         # Python 2 builtin function => six.moves import
+        'raw_input': 'input',
         'reduce': 'reduce',
         'reload': 'reload_module',
     }
 
-    # 'reduce(', 'reload(', but not '.reduce(' (exclude 'moves.reduce(...)')
+    SIX_FUNCTIONS = {
+        # Python 2 builtin function => six function
+        'unichr': 'unichr',
+    }
+
+    # 'reduce(', 'reload('
+    # but not '.reduce(' (exclude 'moves.reduce(...)')
     BUILTIN_REGEX = re.compile(r'(?<!\.)\b(%s)\b( *\()'
                                % '|'.join(SIX_BUILTIN_MOVES))
+
+    # 'unichr('
+    # but not '.unichr('
+    FUNCTION_REGEX = re.compile(r'(?<!\.)\b(%s)\b( *\()'
+                               % '|'.join(SIX_FUNCTIONS))
 
     def replace_mock(self, regs):
         name = regs.group(2)
@@ -797,7 +809,7 @@ class SixMoves(Operation):
         add_imports.add(line)
         return new_name + suffix
 
-    def replace_builtins(self, add_imports, content):
+    def replace_all_builtins(self, add_imports, content):
         six_builtin_moves = dict(self.SIX_BUILTIN_MOVES)
         for regs in self.BUILTIN_REGEX.finditer(content):
             name = regs.group(1)
@@ -817,6 +829,16 @@ class SixMoves(Operation):
         replace_cb = functools.partial(self.replace_builtin, add_imports)
         return builtin_regex2.sub(replace_cb, content)
 
+    def replace_function(self, add_imports, regs):
+        new_name = self.SIX_FUNCTIONS[regs.group(1)]
+        suffix = regs.group(2)
+        add_imports.add('import six')
+        return 'six.%s%s' % (new_name, suffix)
+
+    def replace_all_functions(self, add_imports, content):
+        replace_cb = functools.partial(self.replace_function, add_imports)
+        return self.FUNCTION_REGEX.sub(replace_cb, content)
+
     def patch(self, content):
         add_imports = set()
         replace_names = set()
@@ -828,7 +850,9 @@ class SixMoves(Operation):
         replace_cb = functools.partial(self.replace_from, add_imports)
         content = self.FROM_IMPORT_REGEX.sub(replace_cb, content)
 
-        content = self.replace_builtins(add_imports, content)
+        content = self.replace_all_builtins(add_imports, content)
+
+        content = self.replace_all_functions(add_imports, content)
 
         for old_name, new_name in replace_names:
             # Only match words

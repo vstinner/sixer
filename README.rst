@@ -131,23 +131,30 @@ Operations
 
 - ``six_moves``:
 
-  * replace Python 2 imports with imports from ``six.moves``
-  * Python 2 modules:
+  * replace Python 2 imports with imports from ``six.moves``. Python 2 modules:
 
-    - BaseHTTPServer
-    - ConfigParser
-    - Cookie
-    - HTMLParser
-    - Queue
-    - SimpleHTTPServer
-    - SimpleXMLRPCServer
-    - __builtin__
-    - cPickle
-    - cookielib
-    - htmlentitydefs
-    - httplib
-    - repr
-    - xmlrpclib
+    - ``BaseHTTPServer``
+    - ``ConfigParser``
+    - ``Cookie``
+    - ``HTMLParser``
+    - ``Queue``
+    - ``SimpleHTTPServer``
+    - ``SimpleXMLRPCServer``
+    - ``__builtin__``
+    - ``cPickle``
+    - ``cookielib``
+    - ``htmlentitydefs``
+    - ``httplib``
+    - ``repr``
+    - ``xmlrpclib``
+
+  * replace Python 2 functions with ``six.moves.<function>``. Python 2 functions:
+
+    - ``raw_input()``
+    - ``reduce()``
+    - ``reload()``
+
+  * replace ``unichr()`` with ``six.unichr()``
 
 - ``urllib``:
 
@@ -215,6 +222,7 @@ Changelog
     ``six.integer_types``
   - ``itertools`` now also replaces ``ifilterfalse()``, ``izip()`` and
     ``izip_longest()`` of the ``itertools`` module
+  - ``six_moves`` now also replaces ``unichr(ch)`` with ``six.unichr(ch)``
 
 * Version 0.8 (2015-10-03)
 
