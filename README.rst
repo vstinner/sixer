@@ -19,7 +19,7 @@ Usage
 
 ::
 
-    sixer.py [--write] [options] [all|operation1,operation2,...] <directories or filenames>
+    sixer.py [--write] [options] <all|operation1[,operation2,...]> <directories or filenames>
 
 sixer.py displays the name of patched files. It displays warnings for
 suspicious code which may have to be ported manually.
