@@ -107,7 +107,8 @@ Operations
 - ``itertools``:
 
   * replace ``itertools.ifilter`` with ``six.moves.filter``
-  * replace ``itertools.imap`` with ``six.moves.map``
+  * similar change for ``ifilterfalse()``, ``imap()``, ``izip()`` and
+    ``izip_longest()`` of the ``itertools`` module
 
 - ``long``:
 
@@ -212,6 +213,8 @@ Changelog
 
   - ``long`` operation now also replaces ``(int, long)`` with
     ``six.integer_types``
+  - ``itertools`` now also replaces ``ifilterfalse()``, ``izip()`` and
+    ``izip_longest()`` of the ``itertools`` module
 
 * Version 0.8 (2015-10-03)
 

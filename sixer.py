@@ -847,12 +847,16 @@ class SixMoves(Operation):
 
 class Itertools(Operation):
     NAME = "itertools"
-    DOC = "replace itertools.imap with six.moves.map"
+    DOC = ("replace itertools.ifilter with six.moves.filter, "
+           "similar change for ifilterfalse, imap, izip and izip_longest")
 
     FUNCTIONS = {
         # itertools function => six.moves function
-        'imap': 'map',
         'ifilter': 'filter',
+        'ifilterfalse': 'filterfalse',
+        'imap': 'map',
+        'izip': 'zip',
+        'izip_longest': 'zip_longest',
     }
     FUNCTIONS_REGEX = '(?:%s)' % '|'.join(FUNCTIONS)
 

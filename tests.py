@@ -722,7 +722,7 @@ class TestOperations(unittest.TestCase):
             for i in range(10): pass
             """)
 
-    def test_itertools(self):
+    def test_itertools_from_import(self):
         self.check("itertools",
             """
             from itertools import imap
@@ -738,6 +738,22 @@ class TestOperations(unittest.TestCase):
                 print(x)
             """)
 
+        self.check("itertools",
+            """
+            from itertools import izip
+
+            for x, y in izip(range(3), "abc"):
+                print(x, y)
+            """,
+            """
+            import six
+
+
+            for x, y in six.moves.zip(range(3), "abc"):
+                print(x, y)
+            """)
+
+    def test_itertools_import(self):
         self.check("itertools",
             """
             import itertools
