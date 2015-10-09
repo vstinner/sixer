@@ -1,3 +1,4 @@
 include COPYING
 include tests.py
 include tox.ini
+include releaser.conf
