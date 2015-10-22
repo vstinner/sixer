@@ -10,9 +10,9 @@
 #    the SCM (Mercurial): update MANIFEST.in if needed
 #  - check README.rst formatting: rst2html README.rst README.html
 #  - git commit -a
+#  - git push
 #  - git tag VERSION
 #  - git push --tags
-#  - git push
 #
 # Release the new version:
 #
@@ -34,7 +34,7 @@ with open("README.rst") as fp:
 
 install_options = {
     "name": "sixer",
-    "version": "1.0.1",
+    "version": "1.1",
     "license": "Apache License 2.0",
     "author": 'Victor Stinner',
     "author_email": 'victor.stinner@gmail.com',

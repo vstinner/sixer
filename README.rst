@@ -212,7 +212,7 @@ Resources to port code to Python 3
 Changelog
 ---------
 
-* Version 1.1
+* Version 1.1 (2015-10-22)
 
  - add ``--third-party`` command line option
  - emit a warning instead of failing with an error if we failed to find the
