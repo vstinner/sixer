@@ -52,19 +52,18 @@ class TestOperations(unittest.TestCase):
     def _check(self, operation, before, after, **kw):
         warnings = kw.pop('warnings', None)
         ignore_warnings = kw.pop('ignore_warnings', False)
-        app = kw.pop('app', None)
 
         options = types.SimpleNamespace()
-        options.max_range = sixer.MAX_RANGE
+        options.max_range = kw.pop('max_range', sixer.MAX_RANGE)
         options.to_stdout = False
         options.quiet = False
-        options.app = False
+        options.app = kw.pop('app', None)
+        options.third_party = kw.pop('third_party', None)
         options.write = True
 
         patcher = sixer.Patcher((operation,), options)
-        if app:
-            patcher.application_modules.add(app)
         for attr, value in kw.items():
+            raise ValueError("%r:%r" % (attr, value))
             setattr(patcher.options, attr, value)
 
         with tempfile.NamedTemporaryFile("w+") as temp:
@@ -114,9 +113,14 @@ class TestOperations(unittest.TestCase):
         # Test command line
         if check_program:
             args = []
-            app = kw.get('app')
-            if app:
-                args.append("--app=%s" % app)
+            for key, arg_format in (
+                ('app', '--app=%s'),
+                ('third_party', '--third-party=%s'),
+                ('max_range', '--max-range=%s'),
+            ):
+                arg = kw.get(key)
+                if arg:
+                    args.append(arg_format % arg)
             self.check_program(operation, before, after, *args)
 
     def check_unchanged(self, operation, code, **kw):
@@ -160,6 +164,40 @@ class TestOperations(unittest.TestCase):
             import cue.tests.functional.fixtures.base as base
             """,
             app="cue")
+
+        # unable to find the best place
+        self.check("unicode",
+            """
+            import numpypy
+
+            unicode
+            """,
+            """
+            import numpypy
+
+            import six
+
+
+            six.text_type
+            """,
+            warnings=["Failed to find the best place to add 'import six': "
+                      "put it at the end. Use --app and --third-party "
+                      "options."])
+
+        # test third-party option
+        self.check("unicode",
+            """
+            import numpypy
+
+            unicode
+            """,
+            """
+            import numpypy
+            import six
+
+            six.text_type
+            """,
+            third_party="xyz,numpypy")
 
     def test_raise2(self):
         self.check("raise",
@@ -208,9 +246,7 @@ class TestOperations(unittest.TestCase):
 
             for i in range(10): pass
             """,
-            max_range=5,
-            # it's not possible to pass max_range=5 on the command line
-            check_program=False)
+            max_range=5)
 
         self.check_unchanged("xrange",
             "from six.moves import xrange")

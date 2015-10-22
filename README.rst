@@ -212,6 +212,15 @@ Resources to port code to Python 3
 Changelog
 ---------
 
+* Version 1.1
+
+ - add ``--third-party`` command line option
+ - emit a warning instead of failing with an error if we failed to find the
+   best place to add an import
+ - fix also code to detect third-party modules, don't check for the prefix
+   but the full name (ex: "numpypy" is not detected as third-party if only
+   "numpy" is known)
+
 * Version 1.0 (2015-10-16)
 
  - sixer doesn't modify files by default anymore. Add ``--write`` to really

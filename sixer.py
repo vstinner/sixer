@@ -35,23 +35,33 @@ STDLIB_MODULES = set((
     "urlparse",
 ))
 
-# Name prefix of third-party modules (ex: "oslo" matches "osloconfig"
-# and "oslo.db")
-THIRD_PARTY_MODULES = (
+# Name of third-party modules
+THIRD_PARTY_MODULES = [
     "djanjo",
     "eventlet",
     "iso8601",
     "keystoneclient",
+    "numpy",
     "mock",
     "mox3",
-    "oslo",
+    "oslo_concurrency",
+    "oslo_config",
+    "oslo_db",
+    "oslo_i18n",
+    "oslo_log",
+    "oslo_messaging",
+    "oslo_middleware",
+    "oslo_rootwrap",
+    "oslo_serialization",
+    "oslo_utils",
+    "oslotest",
     "selenium",
     "six",
     "subunit",
     "testtools",
     "webob",
     "wsme",
-)
+]
 
 # Modules of the application
 APPLICATION_MODULES = set((
@@ -1027,8 +1037,14 @@ class Patcher:
         self.options = options
 
         self.application_modules = set(APPLICATION_MODULES)
+        self.third_party_modules = set(THIRD_PARTY_MODULES)
+        if options.third_party:
+            names = options.third_party.split(',')
+            names = set(name.strip() for name in names)
+            self.third_party_modules |= names
         if options.app:
             self.application_modules.add(options.app)
+            self.third_party_modules.discard(options.app)
 
         operations = set(operations)
         if All.NAME in operations:
@@ -1093,9 +1109,8 @@ class Patcher:
             seen_stdlib_group = False
             for import_group in import_groups:
                 start, end, imports = import_group
-                if any(name.startswith(THIRD_PARTY_MODULES)
+                if any(name.split('.', 1)[0] in self.third_party_modules
                        for name in imports):
-                    # oslo* are third-party modules
                     break
                 if any(name in self.application_modules for name in imports):
                     # application import, add import six before in a new group
@@ -1104,11 +1119,12 @@ class Patcher:
                 if any(name in STDLIB_MODULES for name in imports):
                     seen_stdlib_group = True
             else:
-                if seen_stdlib_group:
-                    create_new_import_group = (end, True)
-                else:
-                    raise Exception("Unable to locate the import group of "
-                                    "third-party modules in %s" % import_groups)
+                create_new_import_group = (end, True)
+                if not seen_stdlib_group:
+                    self.warning("%s: Failed to find the best place to add %r: "
+                                 "put it at the end. Use --app and "
+                                 "--third-party options."
+                                 % (self.current_file, import_line.rstrip()))
 
         if create_new_import_group is not None:
             pos, last_group = create_new_import_group
@@ -1235,6 +1251,10 @@ class Patcher:
             '--app', type="str",
             help='Name of the application module, used to sort and group '
                  'imports')
+        parser.add_option(
+            '--third-party', type="str",
+            help='Comma separated list of third-party modules, used to sort '
+                 'and group imports (ex: --third-party=django,eventlet)')
         parser.add_option(
             '-q', '--quiet', action="store_true",
             help='Be quiet')
