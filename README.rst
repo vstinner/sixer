@@ -222,6 +222,8 @@ Changelog
    with ``key in dict``
  - ``long`` now also handles hexadecimal numbers. For example, ``0xffL`` is
    replaced with ``0xff``.
+ - ``except`` now handles also exception with dots
+   (ex: ``except select.error, exc:``)
  - ``iterkeys`` now replaces ``for key in dict.iterkeys():`` with
    ``for key in dict:`` to avoid the usage of six.
 

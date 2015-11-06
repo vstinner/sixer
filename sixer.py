@@ -96,6 +96,8 @@ def from_import_regex(module, symbol):
 
 # 'identifier', 'var3', 'NameCamelCase'
 IDENTIFIER_REGEX = r'[a-zA-Z_][a-zA-Z0-9_]*'
+# 'name', 'module.name'
+QUALNAME_REGEX = r'%s(?:\.%s)*' % (IDENTIFIER_REGEX, IDENTIFIER_REGEX)
 # '[0]'
 GETITEM_REGEX = r'\[[^]]+\]'
 # '()' or '(obj, {})', don't support nested calls: 'f(g())'
@@ -732,10 +734,10 @@ class Except(Operation):
 
     # 'except ValueError, exc:'
     EXCEPT_REGEX = re.compile(r"except (%s), (%s):"
-                              % (IDENTIFIER_REGEX, IDENTIFIER_REGEX))
+                              % (QUALNAME_REGEX, IDENTIFIER_REGEX))
     # 'except (ValueError, TypeError), exc:'
     EXCEPT2_REGEX = re.compile(r"except (\(%s(?:, *%s)*\)), (%s):"
-                               % (IDENTIFIER_REGEX, IDENTIFIER_REGEX,
+                               % (QUALNAME_REGEX, IDENTIFIER_REGEX,
                                   IDENTIFIER_REGEX))
     EXCEPT_WARN_REGEX = re.compile(r"except [^,()]+, [^:]+:")
     EXCEPT_WARN2_REGEX = re.compile(r"except \([^()]+\), [^:]+:")

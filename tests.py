@@ -923,6 +923,17 @@ class TestOperations(unittest.TestCase):
             except (ValueError, TypeError, KeyError) as exc: pass
             """)
 
+        # except select.error
+        self.check("except",
+            """
+            try: func()
+            except select.error, exc: pass
+            """,
+            """
+            try: func()
+            except select.error as exc: pass
+            """)
+
 
 class TestProgram(unittest.TestCase):
     def run_sixer(self, scanned, *paths):
