@@ -278,11 +278,11 @@ class Long(Operation):
     # (int, long)
     INT_LONG_REGEX = re.compile(r'\(int, *long\)')
 
-    # '123L' but not '0123L'
-    REGEX = re.compile(r"\b([1-9][0-9]*|0)[lL]")
+    # '123L', '0xFFL' but not '0123L'
+    REGEX = re.compile(r"\b([1-9][0-9]*|0x[0-9A-Fa-f]+|0)[lL]")
 
     # '123L', '123l', '0123L'
-    CHECK_REGEX = re.compile(r"^.*\b[0-9]+[lL].*$", re.MULTILINE)
+    CHECK_REGEX = re.compile(r"^.*\b(?:Ox)?[0-9]+[lL].*$", re.MULTILINE)
 
     def replace(self, regs):
         return regs.group(1)

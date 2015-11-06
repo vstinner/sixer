@@ -212,6 +212,11 @@ Resources to port code to Python 3
 Changelog
 ---------
 
+* Version 1.2
+
+ - ``long`` now also handles hexadecimal numbers. For example, ``0xffL`` is
+   replaced with ``0xff``.
+
 * Version 1.1 (2015-10-22)
 
  - add ``--third-party`` command line option

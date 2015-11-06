@@ -426,6 +426,11 @@ class TestOperations(unittest.TestCase):
             "x = 1l",
             "x = 1")
 
+        # hexadecimal
+        self.check("long",
+            "values = (0x1L, 0x1l, 0xfL, 0x0L)",
+            "values = (0x1, 0x1, 0xf, 0x0)")
+
         # octal numbers are unchanged
         self.check_unchanged("long",
             "values = (00L, 01L, 012L, 0123L, 01234L, 012345L)",
