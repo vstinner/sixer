@@ -216,6 +216,8 @@ Changelog
 
  - ``long`` now also handles hexadecimal numbers. For example, ``0xffL`` is
    replaced with ``0xff``.
+ - ``iterkeys`` now replaces ``for key in dict.iterkeys():`` with
+   ``for key in dict:`` to avoid the usage of six.
 
 * Version 1.1 (2015-10-22)
 

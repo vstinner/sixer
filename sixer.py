@@ -226,17 +226,23 @@ class Iterkeys(Operation):
     NAME = "iterkeys"
     DOC = "replace dict.iterkeys() with six.iterkeys(dict)"
 
+    FOR_REGEX = re.compile(r"(for %s in %s)\.iterkeys\(\):"
+                           % (EXPR_REGEX, EXPR_REGEX))
     REGEX = re.compile(r"(%s)\.iterkeys\(\)" % EXPR_REGEX)
     CHECK_REGEX = re.compile(r"^.*\biterkeys *\(.*$", re.MULTILINE)
+
+    def replace_for(self, regs):
+        return '%s:' % regs.group(1)
 
     def replace(self, regs):
         return 'six.iterkeys(%s)' % regs.group(1)
 
     def patch(self, content):
+        content = self.FOR_REGEX.sub(self.replace_for, content)
         new_content = self.REGEX.sub(self.replace, content)
-        if new_content == content:
-            return content
-        return self.patcher.add_import_six(new_content)
+        if new_content != content:
+            content = self.patcher.add_import_six(new_content)
+        return content
 
     def check(self, content):
         for match in self.CHECK_REGEX.finditer(content):

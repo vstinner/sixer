@@ -396,11 +396,15 @@ class TestOperations(unittest.TestCase):
     def test_iterkeys(self):
         self.check("iterkeys",
             "for value in data.iterkeys(): pass",
+            "for value in data: pass")
+
+        self.check("iterkeys",
+            "keys = data.iterkeys()",
             """
             import six
 
 
-            for value in six.iterkeys(data): pass
+            keys = six.iterkeys(data)
             """)
 
     def test_next(self):
