@@ -69,6 +69,10 @@ Operations
   * Replace ``except (TypeError, ValueError), exc:`` with
     ``except (TypeError, ValueError) as exc:``
 
+- ``has_key``:
+
+  * Replace ``dict.has_key(key)`` with ``key in dict``
+
 - ``iteritems``:
 
   * replace ``dict.iteritems()`` with ``six.iteritems(dict)``
@@ -214,6 +218,8 @@ Changelog
 
 * Version 1.2
 
+ - add ``has_key`` operation: replace ``dict.has_key(key)``
+   with ``key in dict``
  - ``long`` now also handles hexadecimal numbers. For example, ``0xffL`` is
    replaced with ``0xff``.
  - ``iterkeys`` now replaces ``for key in dict.iterkeys():`` with

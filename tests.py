@@ -407,6 +407,11 @@ class TestOperations(unittest.TestCase):
             keys = six.iterkeys(data)
             """)
 
+    def test_has_key(self):
+        self.check("has_key",
+            "dict.has_key(key)",
+            "key in dict")
+
     def test_next(self):
         self.check("next",
             "item = gen.next()",

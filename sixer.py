@@ -222,6 +222,26 @@ class Itervalues(Operation):
                 self.warn_line(line)
 
 
+class HasKey(Operation):
+    NAME = "has_key"
+    DOC = "replace dict.has_key(key) with 'key in dict'"
+
+    REGEX = re.compile(r"(%s)\.has_key\((%s)\)" % (EXPR_REGEX, EXPR_REGEX))
+    CHECK_REGEX = re.compile(r"^.*\.has_key", re.MULTILINE)
+
+    def replace(self, regs):
+        return '%s in %s' % (regs.group(2), regs.group(1))
+
+    def patch(self, content):
+        return self.REGEX.sub(self.replace, content)
+
+    def check(self, content):
+        for match in self.CHECK_REGEX.finditer(content):
+            line = match.group(0)
+            if "six.iterkeys" not in line:
+                self.warn_line(line)
+
+
 class Iterkeys(Operation):
     NAME = "iterkeys"
     DOC = "replace dict.iterkeys() with six.iterkeys(dict)"
@@ -1014,6 +1034,7 @@ OPERATIONS = (
     Iteritems,
     Itervalues,
     Iterkeys,
+    HasKey,
     Next,
     Long,
     Unicode,
