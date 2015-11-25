@@ -103,6 +103,10 @@ Operations
 
   * replace ``iter.next()`` with ``next(iter)``
 
+- ``print``:
+
+  * Replace ``print msg`` with ``print(msg)``
+
 - ``raise``:
 
   * replace ``raise exc[0], exc[1], exc[2]``
@@ -218,6 +222,7 @@ Changelog
 
 * Version 1.2
 
+ - add ``print`` operation
  - add ``has_key`` operation: replace ``dict.has_key(key)``
    with ``key in dict``
  - ``long`` now also handles hexadecimal numbers. For example, ``0xffL`` is

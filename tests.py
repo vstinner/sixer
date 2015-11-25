@@ -934,6 +934,21 @@ class TestOperations(unittest.TestCase):
             except select.error as exc: pass
             """)
 
+    def test_print(self):
+        self.check("print",
+            """
+            print "hello"
+            print msg
+            print  msg
+            print   msg
+            """,
+            """
+            print("hello")
+            print(msg)
+            print (msg)
+            print  (msg)
+            """)
+
 
 class TestProgram(unittest.TestCase):
     def run_sixer(self, scanned, *paths):

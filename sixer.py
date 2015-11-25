@@ -108,6 +108,8 @@ SUFFIX_REGEX = r'(?:%s|%s)' % (GETITEM_REGEX, CALL_REGEX)
 SUBEXPR_REGEX = r'%s(?:%s)*' % (IDENTIFIER_REGEX, SUFFIX_REGEX)
 # 'inst' or 'self.attr' or 'self.attr[0]'
 EXPR_REGEX = r'%s(?:\.%s)*' % (SUBEXPR_REGEX, SUBEXPR_REGEX)
+# '"hello"'
+STRING_REGEX = r'"[^"]*"'
 # '(...)'
 SUBPARENT_REGEX= r'\([^()]+\)'
 # '(...)' or '(...(...)...)' (max: 1 level of nested parenthesis)
@@ -1019,6 +1021,26 @@ class DictAdd(Operation):
                 self.warn_line(line)
 
 
+class Print(Operation):
+    NAME = "print"
+    DOC = "replace 'print msg' with 'print(msg)'"
+
+    REGEX = re.compile(r"\bprint ( *)(%s|%s)" % (EXPR_REGEX, STRING_REGEX))
+    CHECK_REGEX = re.compile(r"^.*\bprint *[^( ].*$", re.MULTILINE)
+
+    def replace(self, regs):
+        return 'print%s(%s)' % (regs.group(1), regs.group(2))
+
+    def patch(self, content):
+        return self.REGEX.sub(self.replace, content)
+
+    def check(self, content):
+        for match in self.CHECK_REGEX.finditer(content):
+            line = match.group(0)
+            if "six.iterkeys" not in line:
+                self.warn_line(line)
+
+
 class All(Operation):
     NAME = "all"
     DOC = "apply all available operations"
@@ -1050,6 +1072,7 @@ OPERATIONS = (
     Itertools,
     Dict0,
     DictAdd,
+    Print,
     All,
 )
 OPERATION_NAMES = set(operation.NAME for operation in OPERATIONS)
