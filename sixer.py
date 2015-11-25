@@ -252,7 +252,8 @@ class HasKey(Operation):
 
 class Iterkeys(Operation):
     NAME = "iterkeys"
-    DOC = "replace dict.iterkeys() with six.iterkeys(dict)"
+    DOC = ("replace 'for key in dict.iterkeys():' with 'for key in dict:',"
+           "replace dict.iterkeys() with six.iterkeys(dict)")
 
     FOR_REGEX = re.compile(r"(for %s in %s)\.iterkeys\(\):"
                            % (EXPR_REGEX, EXPR_REGEX))
@@ -1027,18 +1028,30 @@ class DictAdd(Operation):
 
 class Print(Operation):
     NAME = "print"
-    DOC = "replace 'print msg' with 'print(msg)'"
+    DOC = ('replace "print msg" with "print(msg)", '
+           'replace "print msg," with "print(msg, end=\' \')"')
 
     # 'print msg', 'print "hello"'
     # but don't match: 'print msg,'
-    REGEX = re.compile(r"\bprint ( *)((?:%s)|%s)(?! *,)" % (EXPR_REGEX, STRING_REGEX))
-    CHECK_REGEX = re.compile(r"^.*\bprint *[^( ].*$", re.MULTILINE)
+    REGEX = re.compile(r"\bprint ( *)((?:%s)|%s)(?! *,)"
+                       % (EXPR_REGEX, STRING_REGEX))
+    # 'print msg,', 'print "hello",'
+    REGEX_COMMA = re.compile(r"\bprint ( *)((?:%s)|%s) *,"
+                             % (EXPR_REGEX, STRING_REGEX))
+    CHECK_REGEX = re.compile(r"^.*\bprint\b *[^( ].*$", re.MULTILINE)
 
     def replace(self, regs):
         return 'print%s(%s)' % (regs.group(1), regs.group(2))
 
+    def replace_comma(self, regs):
+        return "print%s(%s, end=' ')" % (regs.group(1), regs.group(2))
+
     def patch(self, content):
-        return self.REGEX.sub(self.replace, content)
+        content = self.REGEX.sub(self.replace, content)
+        new_content = self.REGEX_COMMA.sub(self.replace_comma, content)
+        if new_content != content:
+            content = self.patcher.add_import(new_content, 'from __future__ import print_function')
+        return content
 
     def check(self, content):
         for match in self.CHECK_REGEX.finditer(content):
@@ -1157,7 +1170,9 @@ class Patcher:
             else:
                 return import_line
 
-        if import_groups[0][2] == {'__future__'}:
+        add_future = (import_names[0] == '__future__')
+
+        if not add_future and import_groups[0][2] == {'__future__'}:
             # Ignore the first import group: from __future__ import ...
             del import_groups[0]
         if len(import_groups) == 3:
@@ -1176,6 +1191,12 @@ class Patcher:
                     break
                 if any(name in STDLIB_MODULES for name in imports):
                     seen_stdlib_group = True
+                    if add_future:
+                        # stdlib imports, add future imports before in a new group
+                        create_new_import_group = (start, False)
+                        break
+                if add_future and any(name == '__future__' for name in imports):
+                    break
             else:
                 create_new_import_group = (end, True)
                 if not seen_stdlib_group:
@@ -1215,16 +1236,15 @@ class Patcher:
 
         return content[:pos] + import_line + content[pos:]
 
-    def add_import_six(self, content):
-        if self.IMPORT_SIX_REGEX.search(content):
-            return content
-        return self.add_import_names(content, 'import six', ['six'])
-
     def add_import(self, content, line):
-        if re.search("^" + re.escape(line) + "$", content, flags=re.MULTILINE):
+        regex = r"^%s *(?:#.*)?$" % re.escape(line)
+        if re.search(regex, content, flags=re.MULTILINE):
             return content
         names = parse_import(line)
         return self.add_import_names(content, line, names)
+
+    def add_import_six(self, content):
+        return self.add_import(content, 'import six')
 
     def _display_warning(self, msg):
         print("WARNING: %s" % msg, file=sys.stderr)

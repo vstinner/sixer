@@ -51,7 +51,8 @@ Operations
 
 - ``basestring``:
 
-  * replace ``basestring`` with ``six.string_types``
+  * replace ``basestring`` with ``six.string_types``,
+    add ``import six``
 
 - ``dict0``:
 
@@ -75,21 +76,25 @@ Operations
 
 - ``iteritems``:
 
-  * replace ``dict.iteritems()`` with ``six.iteritems(dict)``
+  * replace ``dict.iteritems()`` with ``six.iteritems(dict)``,
+    add ``import six``
 
 - ``itervalues``:
 
-  * replace ``dict.itervalues()`` with ``six.itervalues(dict)``
+  * replace ``dict.itervalues()`` with ``six.itervalues(dict)``,
+    add ``import six``
 
 - ``iterkeys``:
 
-  * replace ``dict.iterkeys()`` with ``six.iterkeys(dict)``
-  * note: ``for key in dict.iterkeys():`` can usually be simplified to
-    ``for key in dict:``
+  * Replace ``for key in dict.iterkeys():`` with ``for key in dict:``
+  * Replace ``dict.iterkeys()`` with ``six.iterkeys(dict)``,
+    add ``import six``
 
 - ``itertools``:
 
-  * replace ``itertools.ifilter`` with ``six.moves.filter``
+  * replace ``itertools.ifilter`` with ``six.moves.filter``,
+    add ``import six``
+
   * similar change for ``ifilterfalse()``, ``imap()``, ``izip()`` and
     ``izip_longest()`` of the ``itertools`` module
 
@@ -106,19 +111,21 @@ Operations
 - ``print``:
 
   * Replace ``print msg`` with ``print(msg)``
+  * Replace ``print msg,`` with ``print(msg, end=' ')``, add
+    ``from __future__ import print_function`` import
 
 - ``raise``:
 
   * replace ``raise exc[0], exc[1], exc[2]``
-    with ``six.reraise(*exc)``
+    with ``six.reraise(*exc)``, add ``import six``
   * replace ``raise exc_type, exc_value, exc_tb``
-    with ``six.reraise(exc_type, exc_value, exc_tb)``
-  * replace ``raise exc, msg``
-    with ``raise exc(msg)``
+    with ``six.reraise(exc_type, exc_value, exc_tb)``, add ``import six``
+  * replace ``raise exc, msg`` with ``raise exc(msg)``, add ``import six``
 
 - ``six_moves``:
 
-  * replace Python 2 imports with imports from ``six.moves``. Python 2 modules:
+  * replace Python 2 imports with imports from ``six.moves``,
+    add ``import six``. Python 2 modules:
 
     - ``BaseHTTPServer``
     - ``ConfigParser``
@@ -135,22 +142,26 @@ Operations
     - ``repr``
     - ``xmlrpclib``
 
-  * replace Python 2 functions with ``six.moves.<function>``. Python 2 functions:
+  * replace Python 2 functions with ``six.moves.<function>``,
+    add ``import six``. Python 2 functions:
 
     - ``raw_input()``
     - ``reduce()``
     - ``reload()``
 
-  * replace ``unichr()`` with ``six.unichr()``
+  * replace ``unichr()`` with ``six.unichr()``, add ``import six``
 
 - ``urllib``:
 
-  * replace Python 2 urllib and urllib2 with ``six.moves.urllib``
+  * replace Python 2 urllib and urllib2 with ``six.moves.urllib``,
+    add ``import six``
 
 - ``stringio``:
 
-  * replace ``StringIO.StringIO`` with ``six.StringIO``
-  * replace ``cStringIO.StringIO`` with ``moves.cStringIO``
+  * replace ``StringIO.StringIO`` with ``six.StringIO``,
+    add ``import six``
+  * replace ``cStringIO.StringIO`` with ``moves.cStringIO``,
+    add ``from six import moves``
   * replace ``from StringIO import StringIO`` with ``from six import StringIO``
   * replace ``from cStringIO import StringIO``
     with ``from six.moves import cStringIO as StringIO``
@@ -159,8 +170,8 @@ Operations
 
 - ``unicode``:
 
-  * replace ``unicode`` with ``six.text_type``
-  * replace ``(str, unicode)``  with ``six.string_types``
+  * replace ``unicode`` with ``six.text_type``, add ``import six``
+  * replace ``(str, unicode)``  with ``six.string_types``, add ``import six``
 
 - ``xrange``:
 

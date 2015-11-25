@@ -38,6 +38,151 @@ def run_sixer(operation, *args):
     return (exitcode, os.fsdecode(stdout), os.fsdecode(stderr))
 
 
+def mock_options(kw):
+    options = types.SimpleNamespace()
+    options.max_range = kw.pop('max_range', sixer.MAX_RANGE)
+    options.to_stdout = False
+    options.quiet = False
+    options.app = kw.pop('app', None)
+    options.third_party = kw.pop('third_party', None)
+    options.write = True
+    return options
+
+
+class AddImportTests(unittest.TestCase):
+    def check(self, line, before, after, **kw):
+        # Keywords: app=None
+        before = textwrap.dedent(before).strip() + "\n"
+        after = textwrap.dedent(after).strip() + "\n"
+
+        options = mock_options(kw)
+        patcher = sixer.Patcher(('print',), options)
+        output = patcher.add_import(before, line)
+
+        self.assertEqual(output, after)
+
+    def check_unchanged(self, line, code):
+        self.check(line, code, code)
+
+    def test_exiting(self):
+        self.check_unchanged('import six', """
+            import six  # comment
+
+            code
+        """)
+
+        self.check_unchanged('import six', """
+            import six
+
+            code
+        """)
+
+        self.check_unchanged('from __future__ import print_function', """
+            from __future__ import print_function
+
+            code
+        """)
+
+
+
+    def test_add_import_six(self):
+        # no import before
+        self.check('import six', """
+            code
+        """, """
+            import six
+
+
+            code
+        """)
+
+        # add to existing group, before existing import
+        self.check('import numpy', """
+            import six
+
+            code
+        """, """
+            import numpy
+            import six
+
+            code
+        """)
+
+        # add to existing group, after existing import
+        self.check('import six', """
+            import numpy
+
+            code
+        """, """
+            import numpy
+            import six
+
+            code
+        """)
+
+        # add new future group before
+        self.check('import six', """
+            import app
+
+            code
+        """, """
+            import six
+
+            import app
+
+            code
+        """, app='app')
+
+
+    def test_add_future(self):
+        # no import before
+        self.check('from __future__ import print_function', """
+            code
+        """, """
+            from __future__ import print_function
+
+
+            code
+        """)
+
+        # add to existing group, before existing import
+        self.check('from __future__ import absolute_import', """
+            from __future__ import print_function
+
+            code
+        """, """
+            from __future__ import absolute_import
+            from __future__ import print_function
+
+            code
+        """)
+
+        # add to existing group, after existing import
+        self.check('from __future__ import print_function', """
+            from __future__ import absolute_import
+
+            code
+        """, """
+            from __future__ import absolute_import
+            from __future__ import print_function
+
+            code
+        """)
+
+        # add new future group before
+        self.check('from __future__ import print_function', """
+            import sys
+
+            code
+        """, """
+            from __future__ import print_function
+
+            import sys
+
+            code
+        """)
+
+
 class TestUtils(unittest.TestCase):
     def test_parse_import_groups(self):
         self.assertEqual(sixer.parse_import_groups('import sys\n\nimport six\n'),
@@ -53,14 +198,7 @@ class TestOperations(unittest.TestCase):
         warnings = kw.pop('warnings', None)
         ignore_warnings = kw.pop('ignore_warnings', False)
 
-        options = types.SimpleNamespace()
-        options.max_range = kw.pop('max_range', sixer.MAX_RANGE)
-        options.to_stdout = False
-        options.quiet = False
-        options.app = kw.pop('app', None)
-        options.third_party = kw.pop('third_party', None)
-        options.write = True
-
+        options = mock_options(kw)
         patcher = sixer.Patcher((operation,), options)
         for attr, value in kw.items():
             raise ValueError("%r:%r" % (attr, value))
@@ -955,11 +1093,23 @@ class TestOperations(unittest.TestCase):
             print  (msg)
             """)
 
-        self.check_unchanged("print",
+        self.check("print",
             """
+            import sys
+
             print "hello",
+            print  "hello",
+            print   "hello",
             """,
-            warnings=['print "hello",'])
+            """
+            from __future__ import print_function
+
+            import sys
+
+            print("hello", end=' ')
+            print ("hello", end=' ')
+            print  ("hello", end=' ')
+            """)
 
 
 class TestProgram(unittest.TestCase):
