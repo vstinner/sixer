@@ -108,8 +108,12 @@ SUFFIX_REGEX = r'(?:%s|%s)' % (GETITEM_REGEX, CALL_REGEX)
 SUBEXPR_REGEX = r'%s(?:%s)*' % (IDENTIFIER_REGEX, SUFFIX_REGEX)
 # 'inst' or 'self.attr' or 'self.attr[0]'
 EXPR_REGEX = r'%s(?:\.%s)*' % (SUBEXPR_REGEX, SUBEXPR_REGEX)
-# '"hello"'
-STRING_REGEX = r'"[^"]*"'
+
+# '"hello"', "'hello'"
+_QUOTE1_STRING_REGEX = r'"(?:[^"\\]|\\[tn])*"'
+_QUOTE2_STRING_REGEX = r"'(?:[^'\\]|\\[tn])*'"
+STRING_REGEX = r'(?:%s|%s)' % (_QUOTE1_STRING_REGEX, _QUOTE2_STRING_REGEX)
+
 # '(...)'
 SUBPARENT_REGEX= r'\([^()]+\)'
 # '(...)' or '(...(...)...)' (max: 1 level of nested parenthesis)
@@ -1025,7 +1029,9 @@ class Print(Operation):
     NAME = "print"
     DOC = "replace 'print msg' with 'print(msg)'"
 
-    REGEX = re.compile(r"\bprint ( *)(%s|%s)" % (EXPR_REGEX, STRING_REGEX))
+    # 'print msg', 'print "hello"'
+    # but don't match: 'print msg,'
+    REGEX = re.compile(r"\bprint ( *)((?:%s)|%s)(?! *,)" % (EXPR_REGEX, STRING_REGEX))
     CHECK_REGEX = re.compile(r"^.*\bprint *[^( ].*$", re.MULTILINE)
 
     def replace(self, regs):

@@ -938,16 +938,28 @@ class TestOperations(unittest.TestCase):
         self.check("print",
             """
             print "hello"
+            print 'hello'
+            print "tab\tnewline\n"
+            print 'tab\tnewline\n'
             print msg
             print  msg
             print   msg
             """,
             """
             print("hello")
+            print('hello')
+            print("tab\tnewline\n")
+            print('tab\tnewline\n')
             print(msg)
             print (msg)
             print  (msg)
             """)
+
+        self.check_unchanged("print",
+            """
+            print "hello",
+            """,
+            warnings=['print "hello",'])
 
 
 class TestProgram(unittest.TestCase):
