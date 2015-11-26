@@ -1066,10 +1066,18 @@ class TestOperations(unittest.TestCase):
             """
             try: func()
             except ValueError, exc: pass
+
+            # no space
+            try: func()
+            except TypeError,exc:pass
             """,
             """
             try: func()
             except ValueError as exc: pass
+
+            # no space
+            try: func()
+            except TypeError as exc:pass
             """)
 
         # except (ValueError, TypeError)
@@ -1077,10 +1085,18 @@ class TestOperations(unittest.TestCase):
             """
             try: func()
             except (ValueError, TypeError), exc: pass
+
+            # no space
+            try: func()
+            except (ValueError,TypeError),exc:pass
             """,
             """
             try: func()
             except (ValueError, TypeError) as exc: pass
+
+            # no space
+            try: func()
+            except (ValueError,TypeError) as exc:pass
             """)
 
         # except (ValueError, TypeError, KeyError)
@@ -1088,10 +1104,18 @@ class TestOperations(unittest.TestCase):
             """
             try: func()
             except (ValueError, TypeError, KeyError), exc: pass
+
+            # no space
+            try: func()
+            except (ValueError,TypeError,KeyError),exc:pass
             """,
             """
             try: func()
             except (ValueError, TypeError, KeyError) as exc: pass
+
+            # no space
+            try: func()
+            except (ValueError,TypeError,KeyError) as exc:pass
             """)
 
         # except select.error
@@ -1168,6 +1192,11 @@ class TestOperations(unittest.TestCase):
             print ("hello", end=' ')
             print  ("hello", end=' ')
             """)
+
+        # print arg1,arg2
+        self.check_unchanged("print",
+            'print "note",note',
+            warnings=['print "note",note'])
 
 
 class TestProgram(unittest.TestCase):

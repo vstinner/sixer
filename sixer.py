@@ -764,14 +764,14 @@ class Except(Operation):
            "'except (TypeError, ValueError) as exc:'.")
 
     # 'except ValueError, exc:'
-    EXCEPT_REGEX = re.compile(r"except (%s), (%s):"
+    EXCEPT_REGEX = re.compile(r"except (%s), *(%s):"
                               % (QUALNAME_REGEX, IDENTIFIER_REGEX))
     # 'except (ValueError, TypeError), exc:'
-    EXCEPT2_REGEX = re.compile(r"except (\(%s(?:, *%s)*\)), (%s):"
+    EXCEPT2_REGEX = re.compile(r"except (\(%s(?:, *%s)*\)), *(%s):"
                                % (QUALNAME_REGEX, IDENTIFIER_REGEX,
                                   IDENTIFIER_REGEX))
-    EXCEPT_WARN_REGEX = re.compile(r"except [^,()]+, [^:]+:")
-    EXCEPT_WARN2_REGEX = re.compile(r"except \([^()]+\), [^:]+:")
+    EXCEPT_WARN_REGEX = re.compile(r"except [^,()]+, *[^:]+:")
+    EXCEPT_WARN2_REGEX = re.compile(r"except \([^()]+\), *[^:]+:")
 
     def except_replace(self, regs):
         return 'except %s as %s:' % (regs.group(1), regs.group(2))
@@ -1058,15 +1058,17 @@ class Print(Operation):
 
     # 'print msg', 'print "hello"'
     # but don't match: 'print msg,'
-    REGEX_ARG = re.compile(r"\bprint ( *)((?:%s)|%s)(?! *,)"
-                           % (EXPR_REGEX, STRING_REGEX))
+    REGEX_ARG = re.compile(r"\bprint ( *)((?:%s)|%s)(?! *,)$"
+                           % (EXPR_REGEX, STRING_REGEX),
+                           re.MULTILINE)
     # 'print', 'print # comment'
     # but don't match: 'print msg'
     REGEX = re.compile(r"\bprint( *(?:#.*)?)$", re.MULTILINE)
 
     # 'print msg,', 'print "hello",'
-    REGEX_COMMA = re.compile(r"\bprint ( *)((?:%s)|%s) *,"
-                             % (EXPR_REGEX, STRING_REGEX))
+    REGEX_COMMA = re.compile(r"\bprint ( *)((?:%s)|%s) *,$"
+                             % (EXPR_REGEX, STRING_REGEX),
+                             re.MULTILINE)
 
     CHECK_REGEX = re.compile(r"^.*\bprint\b *[^( ].*$", re.MULTILINE)
 
