@@ -240,7 +240,7 @@ Resources to port code to Python 3
 Changelog
 ---------
 
-* Version 1.2
+* Version 1.2 (2015-11-26)
 
  - add ``octal`` operation: replace ``0123`` with ``0o123``
  - add ``print`` operation: replace ``print msg`` with ``print(msg)``,
