@@ -108,6 +108,10 @@ Operations
 
   * replace ``iter.next()`` with ``next(iter)``
 
+- ``octal``:
+
+  * replace ``0123`` with ``0o123``
+
 - ``print``:
 
   * Replace ``print msg`` with ``print(msg)``
@@ -235,7 +239,7 @@ Changelog
 
 * Version 1.2
 
- - add ``print`` operation
+ - add ``octal`` and ``print`` operation
  - add ``has_key`` operation: replace ``dict.has_key(key)``
    with ``key in dict``
  - ``long`` now also handles hexadecimal numbers. For example, ``0xffL`` is

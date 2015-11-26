@@ -334,6 +334,27 @@ class Long(Operation):
             self.warn_line(match.group(0))
 
 
+class Octal(Operation):
+    NAME = "octal"
+    DOC = "replace 0600 with 0o600"
+
+    # '0123'
+    REGEX = re.compile(r"\b0([0-9]+)\b")
+
+    # '0123'
+    CHECK_REGEX = re.compile(r"^.*\bO[0-9]+.*$", re.MULTILINE)
+
+    def replace(self, regs):
+        return '0o%s' % regs.group(1)
+
+    def patch(self, content):
+        return self.REGEX.sub(self.replace, content)
+
+    def check(self, content):
+        for match in self.CHECK_REGEX.finditer(content):
+            self.warn_line(match.group(0))
+
+
 class Unicode(Operation):
     NAME = "unicode"
     DOC = ("replace unicode with six.text_type,"
@@ -1089,6 +1110,7 @@ OPERATIONS = (
     HasKey,
     Next,
     Long,
+    Octal,
     Unicode,
     Xrange,
     Basestring,
