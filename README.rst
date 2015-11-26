@@ -242,7 +242,9 @@ Changelog
 
 * Version 1.2
 
- - add ``octal`` and ``print`` operation
+ - add ``octal`` operation: replace ``0123`` with ``0o123``
+ - add ``print`` operation: replace ``print msg`` with ``print(msg)``,
+   handle also other print statements (but not all of them yet)
  - add ``has_key`` operation: replace ``dict.has_key(key)``
    with ``key in dict``
  - ``long`` now also handles octal and hexadecimal numbers. For example,
@@ -252,6 +254,8 @@ Changelog
    (ex: ``except select.error, exc:``)
  - ``iterkeys`` now replaces ``for key in dict.iterkeys():`` with
    ``for key in dict:`` to avoid the usage of six.
+ - Enhance ``except`` and ``raise`` regex to match also expressions without
+   spaces after commas
 
 * Version 1.1 (2015-10-22)
 
