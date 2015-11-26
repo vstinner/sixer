@@ -342,9 +342,24 @@ class TestOperations(unittest.TestCase):
             "raise Exception, 'message'",
             "raise Exception('message')")
 
+        # no space after comma
+        self.check("raise",
+            "raise Exception,'message'",
+            "raise Exception('message')")
+
     def test_raise3(self):
         self.check("raise",
             "raise a, b, c",
+            """
+            import six
+
+
+            six.reraise(a, b, c)
+            """)
+
+        # no space after comma
+        self.check("raise",
+            "raise a,b,c",
             """
             import six
 

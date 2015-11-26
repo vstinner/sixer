@@ -716,10 +716,10 @@ class Raise(Operation):
            " and replace 'raise a, b, c' with 'six.reraise(a, b, c)'")
 
     # 'raise a, b, c' expr
-    RAISE3_REGEX = re.compile(r"raise (%s), (%s), (%s)"
+    RAISE3_REGEX = re.compile(r"raise (%s), *(%s), *(%s)"
                               % (EXPR_REGEX, EXPR_REGEX, EXPR_REGEX))
     # 'raise a, b' expr
-    RAISE2_REGEX = re.compile(r'''raise (%s), (%s|'[^']+'|"[^"]+")$'''
+    RAISE2_REGEX = re.compile(r'''raise (%s), *(%s|'[^']+'|"[^"]+")$'''
                               % (EXPR_REGEX, EXPR_REGEX), re.MULTILINE)
     # 'raise a,' line
     RAISE_LINE_REGEX = re.compile(r"^.*raise %s,.*$" % EXPR_REGEX,
@@ -732,6 +732,9 @@ class Raise(Operation):
         exc_type = regs.group(1)
         exc_value = regs.group(2)
         exc_tb = regs.group(3)
+
+        # 'raise exc_info[0], exc_info[1], exc_inf[2]'
+        # => 'six.reraise(*exc_info)'
         if (exc_type.endswith('[0]')
             and exc_value.endswith('[1]')
             and exc_tb.endswith('[2]')):
