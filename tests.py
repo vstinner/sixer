@@ -1073,6 +1073,23 @@ class TestOperations(unittest.TestCase):
             """)
 
     def test_print(self):
+        # print
+        self.check("print",
+            """
+            print
+            print#comment
+            print # comment
+            """,
+            """
+            from __future__ import print_function
+
+
+            print()
+            print()#comment
+            print() # comment
+            """)
+
+        # print msg
         self.check("print",
             """
             print "hello"
@@ -1093,6 +1110,7 @@ class TestOperations(unittest.TestCase):
             print  (msg)
             """)
 
+        # print msg,
         self.check("print",
             """
             import sys

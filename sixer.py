@@ -1029,26 +1029,36 @@ class DictAdd(Operation):
 class Print(Operation):
     NAME = "print"
     DOC = ('replace "print msg" with "print(msg)", '
-           'replace "print msg," with "print(msg, end=\' \')"')
+           'replace "print msg," with "print(msg, end=\' \')", '
+           'replace "print" with "print()"')
 
     # 'print msg', 'print "hello"'
     # but don't match: 'print msg,'
-    REGEX = re.compile(r"\bprint ( *)((?:%s)|%s)(?! *,)"
-                       % (EXPR_REGEX, STRING_REGEX))
+    REGEX_ARG = re.compile(r"\bprint ( *)((?:%s)|%s)(?! *,)"
+                           % (EXPR_REGEX, STRING_REGEX))
+    # 'print', 'print # comment'
+    # but don't match: 'print msg'
+    REGEX = re.compile(r"\bprint( *(?:#.*)?)$", re.MULTILINE)
+
     # 'print msg,', 'print "hello",'
     REGEX_COMMA = re.compile(r"\bprint ( *)((?:%s)|%s) *,"
                              % (EXPR_REGEX, STRING_REGEX))
+
     CHECK_REGEX = re.compile(r"^.*\bprint\b *[^( ].*$", re.MULTILINE)
 
-    def replace(self, regs):
+    def replace_arg(self, regs):
         return 'print%s(%s)' % (regs.group(1), regs.group(2))
+
+    def replace(self, regs):
+        return 'print()%s' % regs.group(1)
 
     def replace_comma(self, regs):
         return "print%s(%s, end=' ')" % (regs.group(1), regs.group(2))
 
     def patch(self, content):
-        content = self.REGEX.sub(self.replace, content)
-        new_content = self.REGEX_COMMA.sub(self.replace_comma, content)
+        content = self.REGEX_ARG.sub(self.replace_arg, content)
+        new_content = self.REGEX.sub(self.replace, content)
+        new_content = self.REGEX_COMMA.sub(self.replace_comma, new_content)
         if new_content != content:
             content = self.patcher.add_import(new_content, 'from __future__ import print_function')
         return content
@@ -1056,8 +1066,7 @@ class Print(Operation):
     def check(self, content):
         for match in self.CHECK_REGEX.finditer(content):
             line = match.group(0)
-            if "six.iterkeys" not in line:
-                self.warn_line(line)
+            self.warn_line(line)
 
 
 class All(Operation):

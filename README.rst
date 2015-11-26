@@ -111,8 +111,10 @@ Operations
 - ``print``:
 
   * Replace ``print msg`` with ``print(msg)``
-  * Replace ``print msg,`` with ``print(msg, end=' ')``, add
-    ``from __future__ import print_function`` import
+  * Replace ``print msg,`` with ``print(msg, end=' ')``
+    and add ``from __future__ import print_function`` import
+  * Replace ``print`` with ``print()``
+    and add ``from __future__ import print_function`` import
 
 - ``raise``:
 
