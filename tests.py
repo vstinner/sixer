@@ -593,10 +593,10 @@ class TestOperations(unittest.TestCase):
             "values = (0x1L, 0x1l, 0xfL, 0x0L)",
             "values = (0x1, 0x1, 0xf, 0x0)")
 
-        # octal numbers are unchanged
-        self.check_unchanged("long",
-            "values = (00L, 01L, 012L, 0123L, 01234L, 012345L)",
-            warnings=["values = (00L, 01L, 012L, 0123L, 01234L, 012345L)"])
+        # octal
+        self.check("long",
+            "values = (00L, 000L, 01L, 012L, 0123L, 01234L, 012345L)",
+            "values = (0o0, 0o00, 0o1, 0o12, 0o123, 0o1234, 0o12345)")
 
         # (int, long)
         self.check("long",

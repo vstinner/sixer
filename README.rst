@@ -100,9 +100,10 @@ Operations
 
 - ``long``:
 
-  * replace ``123L`` with ``123``
+  * replace ``123L`` with ``123`` (decimal)
+  * replace ``0xABl`` with ``0xAB`` (hexadecimal)
+  * replace ``0600L`` with ``0o600`` (octal)
   * replace ``(int, long)`` with ``six.integer_types``
-  * octal number are unchanged (ex: ``010L``)
 
 - ``next``:
 
@@ -111,6 +112,8 @@ Operations
 - ``octal``:
 
   * replace ``0123`` with ``0o123``
+  * Note: use the ``long`` operation to replace long octal numbers
+    (ex: ``0600L``)
 
 - ``print``:
 
@@ -242,8 +245,9 @@ Changelog
  - add ``octal`` and ``print`` operation
  - add ``has_key`` operation: replace ``dict.has_key(key)``
    with ``key in dict``
- - ``long`` now also handles hexadecimal numbers. For example, ``0xffL`` is
-   replaced with ``0xff``.
+ - ``long`` now also handles octal and hexadecimal numbers. For example,
+   ``0xffL`` is replaced with ``0xff``, and ``0600l`` is replace with
+   ``0o600``.
  - ``except`` now handles also exception with dots
    (ex: ``except select.error, exc:``)
  - ``iterkeys`` now replaces ``for key in dict.iterkeys():`` with
