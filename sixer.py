@@ -110,8 +110,8 @@ SUBEXPR_REGEX = r'%s(?:%s)*' % (IDENTIFIER_REGEX, SUFFIX_REGEX)
 EXPR_REGEX = r'%s(?:\.%s)*' % (SUBEXPR_REGEX, SUBEXPR_REGEX)
 
 # '"hello"', "'hello'"
-_QUOTE1_STRING_REGEX = r'"(?:[^"\\]|\\[tn])*"'
-_QUOTE2_STRING_REGEX = r"'(?:[^'\\]|\\[tn])*'"
+_QUOTE1_STRING_REGEX = r'"(?:[^"\\]|\\[tn"])*"'
+_QUOTE2_STRING_REGEX = r"'(?:[^'\\]|\\[tn'])*'"
 STRING_REGEX = r'(?:%s|%s)' % (_QUOTE1_STRING_REGEX, _QUOTE2_STRING_REGEX)
 
 # '(...)'

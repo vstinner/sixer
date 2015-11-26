@@ -1094,8 +1094,6 @@ class TestOperations(unittest.TestCase):
             """
             print "hello"
             print 'hello'
-            print "tab\tnewline\n"
-            print 'tab\tnewline\n'
             print msg
             print  msg
             print   msg
@@ -1103,11 +1101,20 @@ class TestOperations(unittest.TestCase):
             """
             print("hello")
             print('hello')
-            print("tab\tnewline\n")
-            print('tab\tnewline\n')
             print(msg)
             print (msg)
             print  (msg)
+            """)
+
+        # test STRING_REGEX
+        self.check("print",
+            r"""
+            print "tab\tnewline\n>\"<"
+            print 'tab\tnewline\n>\'<'
+            """,
+            r"""
+            print("tab\tnewline\n>\"<")
+            print('tab\tnewline\n>\'<')
             """)
 
         # print msg,
