@@ -113,6 +113,22 @@ EXPR_REGEX = r'%s(?:\.%s)*' % (SUBEXPR_REGEX, SUBEXPR_REGEX)
 _QUOTE1_STRING_REGEX = r'"(?:[^"\\]|\\[tn"])*"'
 _QUOTE2_STRING_REGEX = r"'(?:[^'\\]|\\[tn'])*'"
 STRING_REGEX = r'(?:%s|%s)' % (_QUOTE1_STRING_REGEX, _QUOTE2_STRING_REGEX)
+_EXPR_STRING_REGEX = '(?:%s|%s)' % (EXPR_REGEX, STRING_REGEX)
+# [a, b, c]
+LIST_REGEX = (r'\[ *%s *(?:, *%s *)*\]'
+              % (_EXPR_STRING_REGEX,
+                 _EXPR_STRING_REGEX))
+# (a,)
+_TUPLE1_REGEX = r'\( *%s *, *\)' % _EXPR_STRING_REGEX
+
+# (a, b, c)
+_TUPLEN_REGEX = (r'\( *%s *(?:, *%s *)+\)'
+                 % (_EXPR_STRING_REGEX, _EXPR_STRING_REGEX))
+
+# expr, 'string', (a, b, c), [a, b, c]
+EXPR_STRING_REGEX = ('(?:%s)'
+                     % '|'.join((EXPR_REGEX, STRING_REGEX, LIST_REGEX,
+                                 _TUPLE1_REGEX, _TUPLEN_REGEX)))
 
 # '(...)'
 SUBPARENT_REGEX= r'\([^()]+\)'
@@ -1066,16 +1082,16 @@ class Print(Operation):
 
     # 'print msg', 'print "hello"'
     # but don't match: 'print msg,'
-    REGEX_ARG = re.compile(r"\bprint ( *)((?:%s)|%s)(?! *,)$"
-                           % (EXPR_REGEX, STRING_REGEX),
+    REGEX_ARG = re.compile(r"\bprint ( *)(%s)(?! *,)$"
+                           % EXPR_STRING_REGEX ,
                            re.MULTILINE)
     # 'print', 'print # comment'
     # but don't match: 'print msg'
     REGEX = re.compile(r"\bprint( *(?:#.*)?)$", re.MULTILINE)
 
     # 'print msg,', 'print "hello",'
-    REGEX_COMMA = re.compile(r"\bprint ( *)((?:%s)|%s) *,$"
-                             % (EXPR_REGEX, STRING_REGEX),
+    REGEX_COMMA = re.compile(r"\bprint ( *)(%s) *,$"
+                             % EXPR_STRING_REGEX ,
                              re.MULTILINE)
 
     CHECK_REGEX = re.compile(r"^.*\bprint\b *[^( ].*$", re.MULTILINE)
@@ -1095,6 +1111,89 @@ class Print(Operation):
         new_content = self.REGEX_COMMA.sub(self.replace_comma, new_content)
         if new_content != content:
             content = self.patcher.add_import(new_content, 'from __future__ import print_function')
+        return content
+
+    def check(self, content):
+        for match in self.CHECK_REGEX.finditer(content):
+            line = match.group(0)
+            self.warn_line(line)
+
+
+class String(Operation):
+    NAME = "string"
+    DOC = 'replace string.func(str, ...) with text.func(...)'
+
+
+    # Deprecated functions of the Python 2 string module
+    FUNCTIONS = '|'.join((
+        'lower',
+        'upper',
+        'swapcase',
+        'strip',
+        'lstrip',
+        'rstrip',
+        'split',
+        'splitfields',
+        'rsplit',
+        'join',
+        'joinfields',
+        'index',
+        'rindex',
+        'count',
+        'find',
+        'rfind',
+        'ljust',
+        'rjust',
+        'center',
+        'zfill',
+        'expandtabs',
+        # FIXME: translate, maketrans
+        'capitalize',
+        'replace',
+    ))
+
+    # FIXME: warning on string.letters, removed in Python 3
+
+    # 'string.upper("ABC")', 'string.lower(x)'
+    REGEX = re.compile(r"\bstring\.(%s)\((%s)\)"
+                       % (FUNCTIONS, EXPR_STRING_REGEX))
+
+    # 'string.split("ABC", maxsplit=2)'
+    REGEX_ARGS = re.compile(r"\bstring\.(%s)\((%s), *([^)]+)\)"
+                            % (FUNCTIONS, EXPR_STRING_REGEX))
+
+    # string.atof(str) => float(str)
+    ATOX = {
+        'atof': 'float',
+        'atoi': 'int',
+        'atol': 'int',
+    }
+
+    # 'string.atof("1.2")'
+    REGEX_ATOX = re.compile(r"\bstring\.(%s)\((%s)\)"
+                            % ('|'.join(ATOX), EXPR_STRING_REGEX))
+
+    CHECK_REGEX = re.compile(r"^.*\bstring.upper.*$", re.MULTILINE)
+
+    def replace(self, regs):
+        return '%s.%s()' % (regs.group(2), regs.group(1))
+
+    def replace_args(self, regs):
+        return '%s.%s(%s)' % (regs.group(2), regs.group(1), regs.group(3))
+
+    def replace_atox(self, regs):
+        new_name = self.ATOX[regs.group(1)]
+        return '%s(%s)' % (new_name, regs.group(2))
+
+    def patch(self, content):
+        old_content = content
+        content = self.REGEX.sub(self.replace, content)
+        content = self.REGEX_ARGS.sub(self.replace_args, content)
+        content = self.REGEX_ATOX.sub(self.replace_atox, content)
+        if content != old_content:
+            if 'string.' not in content:
+                # Remove 'import string'
+                content = import_regex(r"string").sub('', content)
         return content
 
     def check(self, content):
@@ -1136,6 +1235,7 @@ OPERATIONS = (
     Dict0,
     DictAdd,
     Print,
+    String,
     All,
 )
 OPERATION_NAMES = set(operation.NAME for operation in OPERATIONS)

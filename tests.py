@@ -1198,6 +1198,60 @@ class TestOperations(unittest.TestCase):
             'print "note",note',
             warnings=['print "note",note'])
 
+    def test_string(self):
+        # upper/lower case
+        self.check("string",
+            """
+            import string
+
+            x = string.lower("ABC")
+            x = string.upper("abc")
+            x = string.swapcase("ABCdef")
+            """,
+            """
+            x = "ABC".lower()
+            x = "abc".upper()
+            x = "ABCdef".swapcase()
+            """)
+
+        # strip, split
+        self.check("string",
+            """
+            import string
+
+            x = string.strip(" abc ")
+            x = string.lstrip(" abc ")
+            x = string.rstrip(" abc ")
+
+            x = string.strip(" def ", ' ')
+            x = string.lstrip(" def ", ' ')
+            x = string.rstrip(" def ", ' ')
+            """,
+            """
+            x = " abc ".strip()
+            x = " abc ".lstrip()
+            x = " abc ".rstrip()
+
+            x = " def ".strip(' ')
+            x = " def ".lstrip(' ')
+            x = " def ".rstrip(' ')
+            """)
+
+        # string.atoX()
+        self.check("string",
+            """
+            import string
+
+            x = string.atof("1.0")
+            x = string.atoi("123")
+            x = string.atol("123")
+            """,
+            """
+            x = float("1.0")
+            x = int("123")
+            x = int("123")
+            """)
+
 
 class TestProgram(unittest.TestCase):
     def run_sixer(self, scanned, *paths):

@@ -160,10 +160,13 @@ Operations
 
   * replace ``unichr()`` with ``six.unichr()``, add ``import six``
 
-- ``urllib``:
+- ``string``:
 
-  * replace Python 2 urllib and urllib2 with ``six.moves.urllib``,
-    add ``import six``
+  * replace ``string.xxx(str, ...)`` with ``str.xxx(...)`` where ``.xxx``
+    is a string method. For example, replace ``string.upper("abc")`` with
+    ``"abc".upper()``.
+  * replace ``string.atof(str)`` with ``float(str)``
+  * replace ``string.atoi(str)`` and ``string.atol(str)`` with ``int(str)``
 
 - ``stringio``:
 
@@ -181,6 +184,11 @@ Operations
 
   * replace ``unicode`` with ``six.text_type``, add ``import six``
   * replace ``(str, unicode)``  with ``six.string_types``, add ``import six``
+
+- ``urllib``:
+
+  * replace Python 2 urllib and urllib2 with ``six.moves.urllib``,
+    add ``import six``
 
 - ``xrange``:
 
@@ -239,6 +247,11 @@ Resources to port code to Python 3
 
 Changelog
 ---------
+
+* Version 1.3
+
+ - add ``string`` operation. For example, replace ``string.upper("abc")`` with
+   ``"abc".upper()``.
 
 * Version 1.2 (2015-11-26)
 
