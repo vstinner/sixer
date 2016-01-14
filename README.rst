@@ -122,6 +122,9 @@ Operations
     and add ``from __future__ import print_function`` import
   * Replace ``print`` with ``print()``
     and add ``from __future__ import print_function`` import
+  * Replace ``print >>sys.stderr, "hello"'``
+    with ``print("hello", file=sys.stderr)``
+    and add ``from __future__ import print_function`` import
 
 - ``raise``:
 
@@ -252,6 +255,8 @@ Changelog
 
  - add ``string`` operation. For example, replace ``string.upper("abc")`` with
    ``"abc".upper()``.
+ - ``print`` now replaces ``print >>sys.stderr, "hello"'``
+   with ``print("hello", file=sys.stderr)``
 
 * Version 1.2 (2015-11-26)
 

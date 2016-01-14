@@ -1085,9 +1085,16 @@ class Print(Operation):
     REGEX_ARG = re.compile(r"\bprint ( *)(%s)(?! *,)$"
                            % EXPR_STRING_REGEX ,
                            re.MULTILINE)
+
     # 'print', 'print # comment'
     # but don't match: 'print msg'
     REGEX = re.compile(r"\bprint( *(?:#.*)?)$", re.MULTILINE)
+
+    # 'print >>file, arg'
+    # but don't match 'print >>file, arg,'  (trailing comma)
+    REGEX_INTO = re.compile(r"\bprint ?( *)>>(%s), *(%s)(?! *,)$"
+                            % (EXPR_REGEX, EXPR_STRING_REGEX),
+                            re.MULTILINE)
 
     # 'print msg,', 'print "hello",'
     REGEX_COMMA = re.compile(r"\bprint ( *)(%s) *,$"
@@ -1102,12 +1109,16 @@ class Print(Operation):
     def replace(self, regs):
         return 'print()%s' % regs.group(1)
 
+    def replace_into(self, regs):
+        return 'print%s(%s, file=%s)' % (regs.group(1), regs.group(3), regs.group(2))
+
     def replace_comma(self, regs):
         return "print%s(%s, end=' ')" % (regs.group(1), regs.group(2))
 
     def patch(self, content):
         content = self.REGEX_ARG.sub(self.replace_arg, content)
-        new_content = self.REGEX.sub(self.replace, content)
+        new_content = self.REGEX_INTO.sub(self.replace_into, content)
+        new_content = self.REGEX.sub(self.replace, new_content)
         new_content = self.REGEX_COMMA.sub(self.replace_comma, new_content)
         if new_content != content:
             content = self.patcher.add_import(new_content, 'from __future__ import print_function')

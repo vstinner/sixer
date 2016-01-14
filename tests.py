@@ -1198,6 +1198,35 @@ class TestOperations(unittest.TestCase):
             'print "note",note',
             warnings=['print "note",note'])
 
+    def check_print_into(self, before, after):
+        self.check("print", '''
+            import sys
+
+            %s
+        ''' % before, '''
+            from __future__ import print_function
+
+            import sys
+
+            %s
+        ''' % after)
+
+    def test_print_into(self):
+        self.check_print_into('print >>sys.stderr, "hello"',
+                              'print("hello", file=sys.stderr)')
+
+        # no space
+        self.check_print_into('print>>sys.stderr,"hello"',
+                              'print("hello", file=sys.stderr)')
+
+        # 2 spaces before >>
+        self.check_print_into('print  >>sys.stderr, "hello"',
+                              'print ("hello", file=sys.stderr)')
+
+        # 3 spaces before >>
+        self.check_print_into('print   >>sys.stderr, "hello"',
+                              'print  ("hello", file=sys.stderr)')
+
     def test_string(self):
         # upper/lower case
         self.check("string",
