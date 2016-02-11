@@ -4,18 +4,18 @@
 #
 #  - run tests: tox
 #  - fill the changelog in README.rst
-#  - update version in setup.py
-#  - set release date in the changelog in README.rst
 #  - check that "python3 setup.py sdist" contains all files tracked by
 #    the SCM (Mercurial): update MANIFEST.in if needed
 #  - check README.rst formatting: rst2html README.rst README.html
+#  - update version in setup.py
+#  - set release date in the changelog in README.rst
 #  - git commit -a
 #  - git push
-#  - git tag VERSION
-#  - git push --tags
 #
 # Release the new version:
 #
+#  - git tag VERSION
+#  - git push --tags
 #  - python3 setup.py register sdist bdist_wheel upload
 #
 # After the release:
@@ -34,7 +34,7 @@ with open("README.rst") as fp:
 
 install_options = {
     "name": "sixer",
-    "version": "1.2",
+    "version": "1.3",
     "license": "Apache License 2.0",
     "author": 'Victor Stinner',
     "author_email": 'victor.stinner@gmail.com',
