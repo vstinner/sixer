@@ -1134,7 +1134,6 @@ class String(Operation):
     NAME = "string"
     DOC = 'replace string.func(str, ...) with text.func(...)'
 
-
     # Deprecated functions of the Python 2 string module
     FUNCTIONS = '|'.join((
         'lower',
@@ -1163,8 +1162,6 @@ class String(Operation):
         'replace',
     ))
 
-    # FIXME: warning on string.letters, removed in Python 3
-
     # 'string.upper("ABC")', 'string.lower(x)'
     REGEX = re.compile(r"\bstring\.(%s)\((%s)\)"
                        % (FUNCTIONS, EXPR_STRING_REGEX))
@@ -1184,7 +1181,9 @@ class String(Operation):
     REGEX_ATOX = re.compile(r"\bstring\.(%s)\((%s)\)"
                             % ('|'.join(ATOX), EXPR_STRING_REGEX))
 
-    CHECK_REGEX = re.compile(r"^.*\bstring.upper.*$", re.MULTILINE)
+    # match 'string.letters',
+    # don't match 'string.ascii_letters'
+    CHECK_REGEX = re.compile(r"^.*\bstring\.(?!ascii_letters).*$", re.MULTILINE)
 
     def replace(self, regs):
         return '%s.%s()' % (regs.group(2), regs.group(1))

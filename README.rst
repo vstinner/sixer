@@ -255,7 +255,7 @@ Changelog
 
  - add ``string`` operation. For example, replace ``string.upper("abc")`` with
    ``"abc".upper()``.
- - ``print`` now replaces ``print >>sys.stderr, "hello"'``
+ - ``print`` now also replaces ``print >>sys.stderr, "hello"'``
    with ``print("hello", file=sys.stderr)``
 
 * Version 1.2 (2015-11-26)

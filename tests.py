@@ -1281,6 +1281,23 @@ class TestOperations(unittest.TestCase):
             x = int("123")
             """)
 
+        # string.letter must emit a warning
+        self.check_unchanged("string",
+            """
+            import string
+
+            x = string.letters
+            """,
+            warnings=['x = string.letters'])
+
+        # string.ascii_letter is fine (no warning)
+        self.check_unchanged("string",
+            """
+            import string
+
+            x = string.ascii_letters
+            """)
+
 
 class TestProgram(unittest.TestCase):
     def run_sixer(self, scanned, *paths):
