@@ -251,6 +251,10 @@ Resources to port code to Python 3
 Changelog
 ---------
 
+* Version 1.4
+
+ - display the name of applied operations in the final summary
+
 * Version 1.3 (2016-02-11)
 
  - add ``string`` operation. For example, replace ``string.upper("abc")`` with

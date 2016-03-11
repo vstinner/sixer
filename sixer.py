@@ -1260,6 +1260,7 @@ class Patcher:
         self.warnings = []
         self.current_file = None
         self.options = options
+        self.applied_operations = set()
 
         self.application_modules = set(APPLICATION_MODULES)
         self.third_party_modules = set(THIRD_PARTY_MODULES)
@@ -1401,7 +1402,7 @@ class Patcher:
         return self.add_import(content, 'import six')
 
     def _display_warning(self, msg):
-        print("WARNING: %s" % msg, file=sys.stderr)
+        print("WARNING: %s" % msg, file=sys.stderr, flush=True)
 
     def warning(self, msg):
         self._display_warning(msg)
@@ -1414,6 +1415,7 @@ class Patcher:
     def write_stdout(self, content):
         for line in content.splitlines():
             print(line)
+        sys.stdout.flush()
 
     def patch(self, filename):
         self.current_file = filename
@@ -1437,7 +1439,9 @@ class Patcher:
             return False
 
         if not self.options.quiet:
-            print("Patch %s with %s" % (filename, ', '.join(sorted(modified))))
+            self.applied_operations |= modified
+            print("Patch %s with %s" % (filename, ', '.join(sorted(modified))),
+                  flush=True)
 
         if not self.options.to_stdout:
             if self.options.write:
@@ -1532,8 +1536,13 @@ class Patcher:
                 raise
             nfiles += 1
 
+        print()
         if not self.options.quiet:
             print("Scanned %s files" % nfiles)
+        if self.applied_operations:
+            operations = sorted(self.applied_operations)
+            print("Applied operations (%s): %s"
+                  % (len(self.applied_operations), ', '.join(operations)))
         if self.warnings:
             print(file=sys.stderr)
             print("Warnings:", file=sys.stderr)
