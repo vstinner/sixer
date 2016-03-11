@@ -254,6 +254,7 @@ Changelog
 * Version 1.4
 
  - display the name of applied operations in the final summary
+ - Issue #4: Don't emit warning on ``six.next()``
 
 * Version 1.3 (2016-02-11)
 

@@ -578,6 +578,13 @@ class TestOperations(unittest.TestCase):
             "item = ((x * 2) for x in data).next()",
             "item = next((x * 2) for x in data)")
 
+        self.check_unchanged("next",
+            """
+            import six
+
+            a = six.next(iter("abc"))
+            """)
+
     def test_long(self):
         self.check("long",
             "values = (0L, 1L, 12L, 123L, 1234L, 12345L)",

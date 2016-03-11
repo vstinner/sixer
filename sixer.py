@@ -303,7 +303,10 @@ class Next(Operation):
     # Match 'gen.next()' and '(...).next()'
     REGEX = re.compile(r"(%s|%s)\.next\(\)" % (EXPR_REGEX, PARENT_REGEX))
 
-    CHECK_REGEX = re.compile(r"^.*\.next *\(.*$", re.MULTILINE)
+    # '.next(' but not 'six.next('
+    CHECK_REGEX = re.compile(r"^.*(?<!six)\.next *\(.*$", re.MULTILINE)
+
+    # 'def next('
     DEF_NEXT_LINE_REGEX = re.compile(r"^.*def next *\(.*$", re.MULTILINE)
 
     def replace(self, regs):
