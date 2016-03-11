@@ -251,7 +251,7 @@ Resources to port code to Python 3
 Changelog
 ---------
 
-* Version 1.4
+* Version 1.4 (2016-03-11)
 
  - display the name of applied operations in the final summary
  - Issue #4: Don't emit warning on ``six.next()``
