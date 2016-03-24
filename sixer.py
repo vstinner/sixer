@@ -37,7 +37,7 @@ STDLIB_MODULES = set((
 
 # Name of third-party modules
 THIRD_PARTY_MODULES = [
-    "djanjo",
+    "django",
     "eventlet",
     "iso8601",
     "keystoneclient",
