@@ -109,12 +109,6 @@ Operations
 
   * replace ``iter.next()`` with ``next(iter)``
 
-- ``octal``:
-
-  * replace ``0123`` with ``0o123``
-  * Note: use the ``long`` operation to replace long octal numbers
-    (ex: ``0600L``)
-
 - ``print``:
 
   * Replace ``print msg`` with ``print(msg)``
@@ -250,6 +244,10 @@ Resources to port code to Python 3
 
 Changelog
 ---------
+
+* Version 1.5
+
+ - remove the ``octal`` operation, it produces too many false positives
 
 * Version 1.4 (2016-03-11)
 

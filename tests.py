@@ -625,24 +625,6 @@ class TestOperations(unittest.TestCase):
             isinstance(foo, six.string_types)
             """)
 
-    def test_octal(self):
-        self.check("octal",
-            "values = (0123, 00456)",
-            "values = (0o123, 0o0456)")
-
-        self.check_unchanged("octal",
-            "values = (0, 123, 123L)")
-
-        # zero
-        self.check("octal",
-            "values = (00, 000, 0000, 00000)",
-            "values = (0o0, 0o00, 0o000, 0o0000)")
-
-        # one
-        self.check("octal",
-            "values = (01, 001, 0001, 00001)",
-            "values = (0o1, 0o01, 0o001, 0o0001)")
-
     def test_six_moves_import(self):
         self.check("six_moves",
             """
