@@ -6,9 +6,9 @@
 #  - fill the changelog in README.rst
 #  - check that "python3 setup.py sdist" contains all files tracked by
 #    the SCM (Mercurial): update MANIFEST.in if needed
-#  - check README.rst formatting: rst2html README.rst README.html
 #  - update version in setup.py
 #  - set release date in the changelog in README.rst
+#  - check README.rst: tox
 #  - git commit -a
 #  - git push
 #
