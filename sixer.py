@@ -930,7 +930,7 @@ class SixMoves(Operation):
 
         for old_name, new_name in replace_names:
             # Only match words
-            regex = r'\b%s\b' % re.escape(old_name)
+            regex = r'\b(?<!\.)%s\b' % re.escape(old_name)
             content = re.sub(regex, new_name, content)
         for line in sorted(add_imports):
             names = parse_import(line)

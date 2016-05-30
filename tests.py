@@ -747,6 +747,22 @@ class TestOperations(unittest.TestCase):
             print(six.unichr(0x20ac))
             """)
 
+    def test_six_moves_configparser(self):
+        # must not be replaced with configparser.configparser,
+        # but configparser.ConfigParser
+        self.check("six_moves",
+            """
+            import ConfigParser
+
+            cfg = ConfigParser.ConfigParser()
+            """,
+            """
+            from six.moves import configparser
+
+
+            cfg = configparser.ConfigParser()
+            """)
+
     def test_stringio(self):
         # import StringIO
         self.check("stringio",

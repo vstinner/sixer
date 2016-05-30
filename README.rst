@@ -245,8 +245,10 @@ Resources to port code to Python 3
 Changelog
 ---------
 
-* Version 1.5
+* Version 1.5 (2016-05-30)
 
+ - six_moves: replace ``ConfigParser.ConfigParser`` with
+   ``configparser.ConfigParser``, not with ``configparser.configparser``
  - remove the ``octal`` operation, it produces too many false positives
 
 * Version 1.4 (2016-03-11)
