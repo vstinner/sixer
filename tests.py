@@ -615,6 +615,11 @@ class TestOperations(unittest.TestCase):
             isinstance(s, six.integer_types)
             """)
 
+        # long(2)
+        self.check("long",
+            "x = long(1)",
+            "x = 1")
+
     def test_basestring(self):
         self.check("basestring",
             "isinstance(foo, basestring)",

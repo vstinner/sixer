@@ -328,29 +328,37 @@ class Next(Operation):
 class Long(Operation):
     NAME = "long"
     DOC = ("replace 123L with 123, "
-           "replace (int, long) with six.integer_types")
+           "replace (int, long) with six.integer_types, "
+           "replace long(1) with 1")
 
     # (int, long)
     INT_LONG_REGEX = re.compile(r'\(int, *long\)')
 
     # '123L', '0xFFL' but not '0123L'
-    REGEX = re.compile(r"\b([1-9][0-9]*|0x[0-9A-Fa-f]+|0)[lL]")
+    REGEX_INT_L = re.compile(r"\b([1-9][0-9]*|0x[0-9A-Fa-f]+|0)[lL]")
 
     # '0123L', '0600l'
     OCTAL_REGEX = re.compile(r"\b0([0-9]*)[lL]")
 
+    # '0123L', '0600l'
+    LONG_INT_REGEX = re.compile(r"\blong *\(([0-9]*)\)")
+
     # '123L', '123l', '0123L'
     CHECK_REGEX = re.compile(r"^.*\b(?:Ox)?[0-9]+[lL].*$", re.MULTILINE)
 
-    def replace(self, regs):
+    def replace_int_l(self, regs):
         return regs.group(1)
 
     def replace_octal(self, regs):
         return '0o%s' % regs.group(1)
 
+    def replace_long_int(self, regs):
+        return regs.group(1)
+
     def patch(self, content):
-        content = self.REGEX.sub(self.replace, content)
+        content = self.REGEX_INT_L.sub(self.replace_int_l, content)
         content = self.OCTAL_REGEX.sub(self.replace_octal, content)
+        content = self.LONG_INT_REGEX.sub(self.replace_long_int, content)
         new_content = self.INT_LONG_REGEX.sub('six.integer_types', content)
         if new_content != content:
             content = self.patcher.add_import_six(new_content)

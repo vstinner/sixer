@@ -104,6 +104,7 @@ Operations
   * replace ``0xABl`` with ``0xAB`` (hexadecimal)
   * replace ``0600L`` with ``0o600`` (octal)
   * replace ``(int, long)`` with ``six.integer_types``
+  * replace ``long(1)`` with ``1``
 
 - ``next``:
 
@@ -244,6 +245,10 @@ Resources to port code to Python 3
 
 Changelog
 ---------
+
+* Version 1.6
+
+ - replace ``long(1)`` with ``1``
 
 * Version 1.5 (2016-05-30)
 
