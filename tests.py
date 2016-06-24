@@ -1055,6 +1055,16 @@ class TestOperations(unittest.TestCase):
             first_item = list(x.items())[0]
             """)
 
+        self.check("dict0",
+            """
+            x1 = x.values()[1]
+            x123 = x.values()[123]
+            """,
+            """
+            x1 = list(x.values())[1]
+            x123 = list(x.values())[123]
+            """)
+
     def test_dict_add(self):
         self.check("dict_add",
             """

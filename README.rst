@@ -58,6 +58,7 @@ Operations
 
   * replace ``dict.keys()[0]`` with ``list(dict.keys())[0]``
   * same for ``dict.values()[0]`` and ``dict.items()[0]``
+  * note: the pattern matches any integer index, not only ``0``
 
 - ``dict_add``:
 
@@ -248,140 +249,140 @@ Changelog
 
 * Version 1.6
 
- - replace ``long(1)`` with ``1``
+  - ``dict0`` now also matches any integer index, not only ``0``
+  - ``long`` now also replaces ``long(1)`` with ``1``
 
 * Version 1.5 (2016-05-30)
 
- - six_moves: replace ``ConfigParser.ConfigParser`` with
-   ``configparser.ConfigParser``, not with ``configparser.configparser``
- - remove the ``octal`` operation, it produces too many false positives
+  - six_moves: replace ``ConfigParser.ConfigParser`` with
+    ``configparser.ConfigParser``, not with ``configparser.configparser``
+  - remove the ``octal`` operation, it produces too many false positives
 
 * Version 1.4 (2016-03-11)
 
- - display the name of applied operations in the final summary
- - Issue #4: Don't emit warning on ``six.next()``
+  - display the name of applied operations in the final summary
+  - Issue #4: Don't emit warning on ``six.next()``
 
 * Version 1.3 (2016-02-11)
 
- - add ``string`` operation. For example, replace ``string.upper("abc")`` with
-   ``"abc".upper()``.
- - ``print`` now also replaces ``print >>sys.stderr, "hello"'``
-   with ``print("hello", file=sys.stderr)``
+  - add ``string`` operation. For example, replace ``string.upper("abc")`` with
+    ``"abc".upper()``.
+  - ``print`` now also replaces ``print >>sys.stderr, "hello"'``
+    with ``print("hello", file=sys.stderr)``
 
 * Version 1.2 (2015-11-26)
 
- - add ``octal`` operation: replace ``0123`` with ``0o123``
- - add ``print`` operation: replace ``print msg`` with ``print(msg)``,
-   handle also other print statements (but not all of them yet)
- - add ``has_key`` operation: replace ``dict.has_key(key)``
-   with ``key in dict``
- - ``long`` now also handles octal and hexadecimal numbers. For example,
-   ``0xffL`` is replaced with ``0xff``, and ``0600l`` is replace with
-   ``0o600``.
- - ``except`` now handles also exception with dots
-   (ex: ``except select.error, exc:``)
- - ``iterkeys`` now replaces ``for key in dict.iterkeys():`` with
-   ``for key in dict:`` to avoid the usage of six.
- - Enhance ``except`` and ``raise`` regex to match also expressions without
-   spaces after commas
+  - add ``octal`` operation: replace ``0123`` with ``0o123``
+  - add ``print`` operation: replace ``print msg`` with ``print(msg)``,
+    handle also other print statements (but not all of them yet)
+  - add ``has_key`` operation: replace ``dict.has_key(key)``
+    with ``key in dict``
+  - ``long`` now also handles octal and hexadecimal numbers. For example,
+    ``0xffL`` is replaced with ``0xff``, and ``0600l`` is replace with
+    ``0o600``.
+  - ``except`` now handles also exception with dots
+    (ex: ``except select.error, exc:``)
+  - ``iterkeys`` now replaces ``for key in dict.iterkeys():`` with
+    ``for key in dict:`` to avoid the usage of six.
+  - Enhance ``except`` and ``raise`` regex to match also expressions without
+    spaces after commas
 
 * Version 1.1 (2015-10-22)
 
- - add ``--third-party`` command line option
- - emit a warning instead of failing with an error if we failed to find the
-   best place to add an import
- - fix also code to detect third-party modules, don't check for the prefix
-   but the full name (ex: "numpypy" is not detected as third-party if only
-   "numpy" is known)
+  - add ``--third-party`` command line option
+  - emit a warning instead of failing with an error if we failed to find the
+    best place to add an import
+  - fix also code to detect third-party modules, don't check for the prefix
+    but the full name (ex: "numpypy" is not detected as third-party if only
+    "numpy" is known)
 
 * Version 1.0 (2015-10-16)
 
- - sixer doesn't modify files by default anymore. Add ``--write`` to really
-   modify files inplace.
- - ``long`` operation now also replaces ``(int, long)`` with
-   ``six.integer_types``
- - ``itertools`` now also replaces ``ifilterfalse()``, ``izip()`` and
-   ``izip_longest()`` of the ``itertools`` module
- - ``six_moves`` now also replaces ``unichr(ch)`` with ``six.unichr(ch)``
- - command line: it's now possible to exclude an operation using ``-`` prefix.
-   For example, ``all,-iteritems`` applies all operations except
-   ``iteritems``.
+  - sixer doesn't modify files by default anymore. Add ``--write`` to really
+    modify files inplace.
+  - ``long`` operation now also replaces ``(int, long)`` with
+    ``six.integer_types``
+  - ``itertools`` now also replaces ``ifilterfalse()``, ``izip()`` and
+    ``izip_longest()`` of the ``itertools`` module
+  - ``six_moves`` now also replaces ``unichr(ch)`` with ``six.unichr(ch)``
+  - command line: it's now possible to exclude an operation using ``-`` prefix.
+    For example, ``all,-iteritems`` applies all operations except
+    ``iteritems``.
 
 * Version 0.8 (2015-10-03)
 
- - urllib now emits a warning on unknown symbol, instead of raising an
-   exception
- - Write warnings to stderr instead of stdout and exit with error code 1
-   if a filename doesn't exist or a directory doesn't contain any .py file
- - ``unicode`` operation also replaces ``(str, unicode)`` with
-   ``six.string_types``
- - When removing an import, don't remove the empty line following the import
-   if the empty line is followed by a second import
- - ``long`` also replaces ``1l`` (lower case L suffix for long numbers)
+  - urllib now emits a warning on unknown symbol, instead of raising an
+    exception
+  - Write warnings to stderr instead of stdout and exit with error code 1
+    if a filename doesn't exist or a directory doesn't contain any .py file
+  - ``unicode`` operation also replaces ``(str, unicode)`` with
+    ``six.string_types``
+  - When removing an import, don't remove the empty line following the import
+    if the empty line is followed by a second import
+  - ``long`` also replaces ``1l`` (lower case L suffix for long numbers)
 
 * Version 0.7 (2015-09-29)
 
- - Add new ``dict0``, ``dict_add`` and ``except`` operations
- - Add --app command line option to specify the Python module of the
-   application, to help sorting imports
- - Code adding new imports respect better OpenStack coding style on imports.
-   For example, it adds two empty lines after imports, instead of a single
-   line.
- - Display the name of the operation which modified files
- - Display also the name of the operation in warnings
- - ``six_moves`` now also patches ``reduce()`` and ``reload()``. For example,
-   ``reduce()`` is replaced with ``six.moves.reduce()``.
- - ``six_moves`` now also patches ``mock.patch()``. For example,
-   ``with mock.patch('__builtin__.open'): ...`` is replaced with
-   ``with mock.patch('six.moves.builtin.open'): ...``
- - ``urllib`` now also replaces ``from ... import ...`` imports.
-   For example, ``from urllib import quote`` is replaced with
-   ``from six.moves.urllib.parse import quote``.
+  - Add new ``dict0``, ``dict_add`` and ``except`` operations
+  - Add --app command line option to specify the Python module of the
+    application, to help sorting imports
+  - Code adding new imports respect better OpenStack coding style on imports.
+    For example, it adds two empty lines after imports, instead of a single
+    line.
+  - Display the name of the operation which modified files
+  - Display also the name of the operation in warnings
+  - ``six_moves`` now also patches ``reduce()`` and ``reload()``. For example,
+    ``reduce()`` is replaced with ``six.moves.reduce()``.
+  - ``six_moves`` now also patches ``mock.patch()``. For example,
+    ``with mock.patch('__builtin__.open'): ...`` is replaced with
+    ``with mock.patch('six.moves.builtin.open'): ...``
+  - ``urllib`` now also replaces ``from ... import ...`` imports.
+    For example, ``from urllib import quote`` is replaced with
+    ``from six.moves.urllib.parse import quote``.
 
 * Version 0.6 (2015-09-11)
 
- - Add "itertools" operation
- - Fix xrange() regex to not modify "from six.moves import xrange" and
-   "moves.xrange(n)"
- - Fix urllib for urllib or urlparse module get from the urllib2 module.
-   For example, ``urllib2.urlparse.urlparse`` (``import urllib2``) is now
-   replaced with ``urllib.parse.urlparse`` (``from six.moves import urllib``).
+  - Add "itertools" operation
+  - Fix xrange() regex to not modify "from six.moves import xrange" and
+    "moves.xrange(n)"
+  - Fix urllib for urllib or urlparse module get from the urllib2 module.
+    For example, ``urllib2.urlparse.urlparse`` (``import urllib2``) is now
+    replaced with ``urllib.parse.urlparse`` (``from six.moves import urllib``).
 
 * Version 0.5 (2015-07-08)
 
- - six_moves: support "import module as name" syntax and add cPickle module
- - Add --to-stdout, --quiet and --max-range command line options
- - Emit a warning if the directory does not contain any .py file or
-   if the path does not exist
- - Test also directly the sixer.py program
+  - six_moves: support "import module as name" syntax and add cPickle module
+  - Add --to-stdout, --quiet and --max-range command line options
+  - Emit a warning if the directory does not contain any .py file or
+    if the path does not exist
+  - Test also directly the sixer.py program
 
 * Version 0.4 (2015-06-09)
 
- - sixer.py now accepts multiple filenames on the command line, but
-   operations becomes the first command line parameter
- - the ``stringio`` operation now also replaces cStringIO and
-   ``from StringIO import StringIO``
- - urllib: replace also urlparse.symbol
- - six_moves: support more modules: Cookie, HTMLParser, SimpleHTTPServer,
-   cookielib, xmlrpclib, etc.
- - Refactor operations as classes to cleanup the code
+  - sixer.py now accepts multiple filenames on the command line, but
+    operations becomes the first command line parameter
+  - the ``stringio`` operation now also replaces cStringIO and
+    ``from StringIO import StringIO``
+  - urllib: replace also urlparse.symbol
+  - six_moves: support more modules: Cookie, HTMLParser, SimpleHTTPServer,
+    cookielib, xmlrpclib, etc.
+  - Refactor operations as classes to cleanup the code
 
 * Version 0.3.1 (2015-05-27)
 
- - Fix the "all" operation
- - six_moves knows more modules
- - urllib: add pathname2url, don't touch urllib2.parse_http_list()
+  - Fix the "all" operation
+  - six_moves knows more modules
+  - urllib: add pathname2url, don't touch urllib2.parse_http_list()
 
 * Version 0.3 (2015-05-27)
 
- - First command line parameter can now be a filename
- - Add "all", "basestring", "iterkeys", "six_moves", "stringio"
-   and "urllib" operations
- - Enhance the knownledge tables for modules (stdlib, third parties,
-   applications)
- - Ignore unparsable import lines when adding an import
+  - First command line parameter can now be a filename
+  - Add "all", "basestring", "iterkeys", "six_moves", "stringio"
+    and "urllib" operations
+  - Enhance the knownledge tables for modules (stdlib, third parties,
+    applications)
+  - Ignore unparsable import lines when adding an import
 
 * Version 0.2 (2015-05-12):
 
- - First public release
-
+  - First public release

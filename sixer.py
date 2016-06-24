@@ -1025,13 +1025,13 @@ class Dict0(Operation):
     DOC = ("replace dict.keys()[0] with list(dict.keys())[0], "
            "same for dict.values()[0] and dict.items()[0]")
 
-    EXPR_REGEX = re.compile(r'(%s\.(?:keys|values|items)\(\))\[0\]'
+    EXPR_REGEX = re.compile(r'(%s\.(?:keys|values|items)\(\))\[([0-9]+)\]'
                             % EXPR_REGEX)
 
-    CHECK_REGEX = re.compile(r'\.(?:keys|values|items)\(\)\[0\]')
+    CHECK_REGEX = re.compile(r'\.(?:keys|values|items)\(\)\[[0-9]+\]')
 
     def replace(self, regs):
-        return 'list(%s)[0]' % regs.group(1)
+        return 'list(%s)[%s]' % (regs.group(1), regs.group(2))
 
     def patch(self, content):
         return self.EXPR_REGEX.sub(self.replace, content)
