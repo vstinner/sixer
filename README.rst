@@ -247,7 +247,7 @@ Resources to port code to Python 3
 Changelog
 ---------
 
-* Version 1.6
+* Version 1.6 (2016-07-25)
 
   - ``dict0`` now also matches any integer index, not only ``0``
   - ``long`` now also replaces ``long(1)`` with ``1``
