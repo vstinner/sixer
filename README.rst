@@ -9,7 +9,7 @@ It uses basic regular expressions to find code which needs to be modified. It
 emits warnings when code was not patched or looks suspicious.
 
 * `sixer project at Github
-  <https://github.com/haypo/sixer>`_ (source, bug tracker)
+  <https://github.com/vstinner/sixer>`_ (source, bug tracker)
 * `sixer in the Python Cheeseshop (PyPI)
   <https://pypi.python.org/pypi/sixer>`_
 

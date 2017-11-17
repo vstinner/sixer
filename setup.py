@@ -41,7 +41,7 @@ install_options = {
 
     "description": "Add Python 3 support to Python 2 applications using the six module.",
     "long_description": long_description,
-    "url": "https://github.com/haypo/sixer",
+    "url": "https://github.com/vstinner/sixer",
 
     "classifiers": [
         "Programming Language :: Python",
