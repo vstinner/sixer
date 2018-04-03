@@ -1,6 +1,10 @@
 Sixer
 =====
 
+.. image:: http://unmaintained.tech/badge.svg
+   :target: http://unmaintained.tech/
+   :alt: No Maintenance Intended
+
 sixer is a tool adding Python 3 support to a Python 2 project. It was written
 to produces patches to port OpenStack to Python 3. It is focused on supporting
 Python 2.7 and 3.4.
