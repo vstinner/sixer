@@ -251,6 +251,10 @@ Resources to port code to Python 3
 Changelog
 ---------
 
+* Version 1.6.1 (2018-10-24)
+
+  - Project homepage moved to: https://github.com/vstinner/sixer
+
 * Version 1.6 (2016-07-25)
 
   - ``dict0`` now also matches any integer index, not only ``0``
