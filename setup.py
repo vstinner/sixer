@@ -16,12 +16,15 @@
 #
 #  - git tag VERSION
 #  - git push --tags
-#  - python3 setup.py register sdist bdist_wheel upload
+#  - python3 setup.py sdist bdist_wheel
+#  - twine upload dist/*
 #
 # After the release:
 #
 #  - increment version in setup.py
-#  - git commit && git push
+#  - git commit -a -m "post-release"
+#  - git push
+
 import sys
 
 try:
@@ -34,7 +37,7 @@ with open("README.rst") as fp:
 
 install_options = {
     "name": "sixer",
-    "version": "1.6.1",
+    "version": "1.6.2",
     "license": "Apache License 2.0",
     "author": 'Victor Stinner',
     "author_email": 'victor.stinner@gmail.com',
